@@ -1158,5 +1158,11 @@ const hasPlace=!!(place && ayahJuz[place.s+':'+place.a]);
 })();
 })();
 </script>
+<script>
+// تسجيل ملف الخدمة للعمل بدون إنترنت (يعمل فقط على رابط الموقع الدائم)
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost') && !/htmlrunner|siteshare/i.test(location.hostname)) {
+  addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+</script>
 </body>
 </html>
