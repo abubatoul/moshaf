@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>إحصاءات القرآن الكريم</title>
+<style>
+:root{--bg:#f6f8f5;--s:#fff;--fg:#17231d;--m:#5d6e64;--a:#1d6a50;--l:#dbe3dd;--g:#9a7a2a}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1612;--s:#16221b;--fg:#e8efe9;--m:#9fb2a6;--a:#58c29b;--l:#26362d;--g:#d4b45a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-family:"IBM Plex Sans Arabic",system-ui,Tahoma,sans-serif;padding:16px;max-width:36rem;margin-inline:auto}
+h1{font-size:1.3rem;color:var(--a);margin:.4rem 0 1rem}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.c{background:var(--s);border:1px solid var(--l);border-radius:14px;padding:.9rem;text-align:center}
+.c b{display:block;font-size:2rem;color:var(--a)}.c span{color:var(--m);font-size:.9rem}
+table{width:100%;border-collapse:collapse;margin-top:1rem;background:var(--s);border:1px solid var(--l);border-radius:14px;overflow:hidden}
+th,td{padding:.55rem .7rem;text-align:center;border-bottom:1px solid var(--l)}th{color:var(--m);font-weight:500;font-size:.9rem}
+.n{color:var(--m);font-size:.85rem;margin-top:.8rem;line-height:1.7}button{font:inherit;margin-top:1rem;width:100%;height:2.6rem;border-radius:10px;border:0;background:var(--a);color:#fff}
+</style></head><body>
+<h1>إحصاءات القرآن الكريم</h1>
+<div class="g" id="g"></div>
+<table id="t" hidden><thead><tr><th>اليوم</th><th>عدد الفتحات</th><th>أجهزة مختلفة</th></tr></thead><tbody></tbody></table>
+<p class="n" id="n">جارٍ التحميل…</p>
+<button id="r" type="button">تحديث</button>
+<script>
+const B='https://khatmat-quraan-default-rtdb.europe-west1.firebasedatabase.app/khatma/mushafStats.json';
+const ar=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
+async function load(){
+  const n=document.getElementById('n');n.textContent='جارٍ التحميل…';
+  try{
+    const r=await fetch(B+'?_='+Date.now());const d=await r.json();
+    if(!d){n.textContent='لا توجد بيانات بعد.';return;}
+    const total=(d.total&&d.total.opens)||0, devs=(d.total&&d.total.devices)||0;
+    const days=d.days||{};const keys=Object.keys(days).sort().reverse();
+    const today=new Date(Date.now()+3*3600*1000).toISOString().slice(0,10);
+    const td=days[today]||{};const tdev=Object.keys(td.dev||{}).length;
+    const now=Date.now();const act7=Object.values(d.devices||{}).filter(x=>x.last&&now-x.last<7*864e5).length;
+    document.getElementById('g').innerHTML=
+      [['إجمالي مرات الفتح',total],['عدد الأجهزة',devs],['فتحات اليوم',td.opens||0],['أجهزة اليوم',tdev],['نشطة آخر ٧ أيام',act7]]
+      .map(([l,v])=>'<div class="c"><b>'+ar(v)+'</b><span>'+l+'</span></div>').join('');
+    const tb=document.querySelector('#t tbody');tb.textContent='';
+    keys.slice(0,14).forEach(k=>{const x=days[k];const tr=document.createElement('tr');
+      [k,ar(x.opens||0),ar(Object.keys(x.dev||{}).length)].forEach(v=>{const c=document.createElement('td');c.textContent=v;tr.appendChild(c);});tb.appendChild(tr);});
+    document.getElementById('t').hidden=false;
+    n.textContent='«أجهزة» تعني متصفحات مختلفة، وليس أشخاصاً. ومن يمسح بيانات المتصفح أو يستخدم جهازاً ثانياً يُحسب مرة جديدة.';
+  }catch(e){n.textContent='تعذّر جلب البيانات. تحقق من الاتصال.';}
+}
+document.getElementById('r').addEventListener('click',load);load();
+</script></body></html>
