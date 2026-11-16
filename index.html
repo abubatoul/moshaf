@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>المصحف المتحرك</title>
+<title>القرآن الكريم</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Scheherazade+New:wght@400;700&family=Noto+Naskh+Arabic:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
 <style>
 /* Layout: ترويسة ثابتة للاختيار، عمود قراءة وسط، وشريط تحكم سفلي ثابت للتمرير التلقائي */
@@ -232,11 +232,11 @@ let deferredInstall=null;
     add('meta',{name:'theme-color',content:'#1d6a50'});
     add('meta',{name:'mobile-web-app-capable',content:'yes'});
     add('meta',{name:'apple-mobile-web-app-capable',content:'yes'});
-    add('meta',{name:'apple-mobile-web-app-title',content:'المصحف'});
+    add('meta',{name:'apple-mobile-web-app-title',content:'القرآن الكريم'});
     add('meta',{name:'apple-mobile-web-app-status-bar-style',content:'black-translucent'});
     add('link',{rel:'apple-touch-icon',href:ICON.a180});
     add('link',{rel:'icon',href:ICON.a192});
-    const man={name:'المصحف المتحرك',short_name:'المصحف',start_url:location.href.split('#')[0],scope:location.href.split('#')[0].replace(/[^\/]*$/,''),display:'standalone',orientation:'portrait',lang:'ar',dir:'rtl',background_color:'#1d6a50',theme_color:'#1d6a50',
+    const man={name:'القرآن الكريم',short_name:'القرآن الكريم',start_url:location.href.split('#')[0],scope:location.href.split('#')[0].replace(/[^\/]*$/,''),display:'standalone',orientation:'portrait',lang:'ar',dir:'rtl',background_color:'#1d6a50',theme_color:'#1d6a50',
       icons:[{src:ICON.a192,sizes:'192x192',type:'image/png',purpose:'any'},{src:ICON.a512,sizes:'512x512',type:'image/png',purpose:'any'}]};
     add('link',{rel:'manifest',href:URL.createObjectURL(new Blob([JSON.stringify(man)],{type:'application/manifest+json'}))});
   }catch(e){}
