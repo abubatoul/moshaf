@@ -1191,5 +1191,28 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   }catch(e){}
 })();
 </script>
+
+<script>
+// عدّاد زيارات بسيط (رقم عشوائي للجهاز فقط، بدون أي بيانات شخصية)
+(function(){
+  try{
+    if (!/\.github\.io$/i.test(location.hostname)) return;
+    if (sessionStorage.getItem('qk-cnt')) return; sessionStorage.setItem('qk-cnt','1');
+    const B='https://khatmat-quraan-default-rtdb.europe-west1.firebasedatabase.app/khatma/mushafStats';
+    let id=localStorage.getItem('qk-id'), isNew=false;
+    if (!id){ id=(Date.now().toString(36)+Math.random().toString(36).slice(2,8)); localStorage.setItem('qk-id',id); isNew=true; }
+    const now=Date.now(), d=new Date(now+3*3600*1000).toISOString().slice(0,10); // تاريخ الكويت
+    const put=(p,v)=>fetch(B+p+'.json',{method:'PUT',body:JSON.stringify(v),keepalive:true}).catch(()=>{});
+    const inc={'.sv':{increment:1}};
+    setTimeout(()=>{
+      put('/total/opens',inc);
+      put('/days/'+d+'/opens',inc);
+      put('/days/'+d+'/dev/'+id,true);
+      put('/devices/'+id+'/last',now);
+      if (isNew){ put('/devices/'+id+'/first',now); put('/total/devices',inc); }
+    },4000);
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
