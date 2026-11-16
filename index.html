@@ -1164,5 +1164,31 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
   addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
 }
 </script>
+
+<style>
+#ehda{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:18px;opacity:0;transition:opacity .35s}
+#ehda.on{opacity:1}
+#ehda[hidden]{display:none}
+#ehda .card{background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:18px;max-width:22rem;width:100%;padding:1.4rem 1.2rem 1.1rem;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+#ehda .lead{font-family:var(--font-ui);font-size:1.05rem;color:var(--muted);margin:0 0 .6rem}
+#ehda .nm{font-family:"Aref Ruqaa","Amiri Quran",serif;font-weight:700;font-size:1.7rem;line-height:2;color:var(--accent);margin:0}
+#ehda .nm small{font-size:1.2rem;color:var(--gold);margin-inline-end:.4rem}
+#ehda button{font:inherit;margin-top:.9rem;width:100%;height:2.6rem;border-radius:10px;border:0;background:var(--accent);color:var(--accent-fg);cursor:pointer}
+</style>
+<script>
+// رسالة إهداء الثواب: تظهر عند فتح المصحف ثم تختفي
+(function(){
+  try{
+    const d=document.createElement('div'); d.id='ehda'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','إهداء الثواب');
+    d.innerHTML='<div class="card"><p class="lead">يُهدي ثوابه إلى</p><p class="nm"><small>المرحوم:</small>عبد مطر</p><p class="nm"><small>المرحوم:</small>محمد عبد</p><button type="button">آمين</button></div>';
+    document.body.appendChild(d);
+    let tm=null;
+    const close=()=>{ clearTimeout(tm); d.classList.remove('on'); setTimeout(()=>{ d.hidden=true; },350); };
+    d.addEventListener('click',close);
+    requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add('on')));
+    tm=setTimeout(close,9000);
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
