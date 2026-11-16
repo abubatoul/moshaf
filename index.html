@@ -1173,6 +1173,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 #ehda .lead{font-family:var(--font-ui);font-size:1.05rem;color:var(--muted);margin:0 0 .6rem}
 #ehda .nm{font-family:"Aref Ruqaa","Amiri Quran",serif;font-weight:700;font-size:1.7rem;line-height:2;color:var(--accent);margin:0}
 #ehda .nm small{font-size:1.2rem;color:var(--gold);margin-inline-end:.4rem}
+#ehda .all{font-family:var(--font-ui);font-size:1.1rem;line-height:1.8;color:var(--fg);margin:.5rem 0 0;padding-top:.7rem;border-top:1px solid var(--line)}
 #ehda button{font:inherit;margin-top:.9rem;width:100%;height:2.6rem;border-radius:10px;border:0;background:var(--accent);color:var(--accent-fg);cursor:pointer}
 </style>
 <script>
@@ -1180,7 +1181,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 (function(){
   try{
     const d=document.createElement('div'); d.id='ehda'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','إهداء الثواب');
-    d.innerHTML='<div class="card"><p class="lead">يُهدي ثوابه إلى</p><p class="nm"><small>المرحوم:</small>عبد مطر</p><p class="nm"><small>المرحوم:</small>محمد عبد</p><button type="button">آمين</button></div>';
+    d.innerHTML='<div class="card"><p class="lead">يُهدي ثوابه إلى:</p><p class="nm"><small>المرحوم:</small>عبد مطر</p><p class="nm"><small>المرحوم:</small>محمد عبد</p><p class="all">وإلى جميع أمواتنا وأموات المسلمين</p><button type="button">آمين</button></div>';
     document.body.appendChild(d);
     let tm=null;
     const close=()=>{ clearTimeout(tm); d.classList.remove('on'); setTimeout(()=>{ d.hidden=true; },350); };
