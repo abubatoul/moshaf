@@ -35,7 +35,7 @@ self.addEventListener('fetch', (e) => {
   // الصفحة وملفات الموقع نفسه: الشبكة أولاً (تحديث فوري)، وعند انقطاع الاتصال من الذاكرة
   if (url.origin === self.location.origin) {
     e.respondWith(
-      fetch(req).then((r) => {
+      fetch(req.mode === 'navigate' ? new Request(req.url, { cache: 'no-cache', credentials: 'same-origin' }) : new Request(req, { cache: 'no-cache' })).then((r) => {
         if (r && r.ok) { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
         return r;
       }).catch(async () => {
