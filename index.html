@@ -164,7 +164,8 @@ body.ao .apc{display:flex}
 .apc button{font:inherit;font-size:1.2rem;width:2.8rem;height:2.8rem;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;padding:0}
 .apc #apPlay{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);width:3.4rem;height:3.4rem}
 #fab,#fab2{position:static!important;flex:none;width:2.8rem!important;height:2.8rem!important;font-size:1.2rem!important;box-shadow:none!important}
-#fab{border:0}
+#fab{background:var(--surface)!important;color:var(--accent)!important;border:1.5px solid var(--accent)!important}
+body.vo #fab{background:#d33!important;border-color:#d33!important}
 #apPanel .ap-x{flex:none;font:inherit;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;height:2.2rem;padding:0 .8rem;cursor:pointer}
 #apPanel .ap-ctl{justify-content:center;gap:1rem;direction:ltr}
 #apPanel .ap-ctl button{font:inherit;font-size:1.3rem;width:3rem;height:3rem;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;padding:0}
@@ -223,14 +224,14 @@ body.ao .apc{display:flex}
     <p class="err" id="goErr"></p>
   </div>
   <div class="bar-in">
-    <button id="fab" type="button" aria-label="القراءة الصوتية">🎤</button>
+    <button id="fab2" type="button" aria-label="استماع للقارئ">🎧</button>
     <button id="play" aria-label="تشغيل التمرير التلقائي">▶</button>
     <div class="speed">
       <div class="lab"><span>بطيء</span><span id="spv"></span><span>سريع</span></div>
       <input type="range" id="speed" min="5" max="120" step="1" value="30" aria-label="سرعة التمرير" dir="ltr">
     </div>
     <div class="apc"><button id="apPrev" type="button" aria-label="الآية السابقة">⏮</button><button id="apPlay" type="button" aria-label="تشغيل">▶</button><button id="apNextB" type="button" aria-label="الآية التالية">⏭</button></div>
-    <button id="fab2" type="button" aria-label="استماع للقارئ">🎧</button>
+    <button id="fab" type="button" aria-label="القراءة الصوتية">🎤</button>
   </div>
   <div class="tools">
     <button id="ft" aria-label="حجم الخط">أ</button>
@@ -709,7 +710,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٦ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٨ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
