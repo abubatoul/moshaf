@@ -156,6 +156,8 @@ body.vo #fab2,body.vo #apPanel{display:none}
 #apPanel[hidden]{display:none}
 #apPanel .ap-row{display:flex;gap:.5rem;align-items:center}
 #apPanel select{flex:1;max-width:none;font-size:.85rem;padding:.35rem .4rem}
+#apPanel .ap-name{flex:1;min-width:0;font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;height:2.2rem;padding:0 .8rem;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:start}
+body.ao .bar-in{display:none}
 #apPanel .ap-x{flex:none;font:inherit;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;height:2.2rem;padding:0 .8rem;cursor:pointer}
 #apPanel .ap-ctl{justify-content:center;gap:1rem;direction:ltr}
 #apPanel .ap-ctl button{font:inherit;font-size:1.3rem;width:3rem;height:3rem;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;padding:0}
@@ -186,7 +188,8 @@ body.vo #fab2,body.vo #apPanel{display:none}
 <div class="bar">
   <div id="micBar" hidden><i class="dot"></i><span id="micTxt" class="t"></span><button id="micStop" type="button">إيقاف</button></div>
   <div id="apPanel" hidden>
-    <div class="ap-row"><select id="apRec" aria-label="القارئ"></select><select id="apRepSel" aria-label="تكرار الآية"><option value="1">بلا تكرار</option><option value="2">مرتين</option><option value="3">٣ مرات</option><option value="5">٥ مرات</option></select><button class="ap-x" id="apX" type="button" aria-label="إغلاق">✕</button></div>
+    <div class="ap-row"><button class="ap-name" id="apName" type="button"></button><button class="ap-x" id="apX" type="button" aria-label="إغلاق">✕</button></div>
+    <div class="ap-row" id="apSel" hidden><select id="apRec" aria-label="القارئ"></select><select id="apRepSel" aria-label="تكرار الآية"><option value="1">بلا تكرار</option><option value="2">مرتين</option><option value="3">٣ مرات</option><option value="5">٥ مرات</option></select></div>
     <div class="ap-row ap-ctl"><button id="apPrev" type="button" aria-label="الآية السابقة">⏮</button><button id="apPlay" type="button" aria-label="تشغيل">▶</button><button id="apNextB" type="button" aria-label="الآية التالية">⏭</button></div>
     <p class="ap-note">الصوت من EveryAyah.com · يحتاج إنترنت</p>
   </div>
@@ -699,7 +702,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٤ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٥ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1179,13 +1182,17 @@ const apAudio=new Audio(); apAudio.preload='auto';
 const apPanel=$('apPanel'), fab2=$('fab2');
 for (const k in REC){ const o=document.createElement('option'); o.value=k; o.textContent=REC[k][0]; $('apRec').appendChild(o); }
 $('apRec').value=apRec; $('apRepSel').value=String(apRepN);
+function apNm(){ $('apName').textContent='🎙 '+REC[apRec][0]+(apRepN>1?' · تكرار '+ar(apRepN):'')+' ▾'; }
+function apBody(){ document.body.classList.toggle('ao',apOn||!apPanel.hidden); }
+apNm();
+$('apName').addEventListener('click',()=>{ $('apSel').hidden=!$('apSel').hidden; });
 const apPad=(n,l)=>String(n).padStart(l,'0');
 function apUrl(s,a,rec){ return 'https://everyayah.com/data/'+REC[rec||apRec][1]+'/'+apPad(s,3)+apPad(a,3)+'.mp3'; }
 function apList(v){ const s=+v.dataset.s, a=+v.dataset.a, l=[]; if(a===1&&s!==1&&s!==9) l.push(apUrl(1,1)); l.push(apUrl(s,a)); return l; }
-function apHide(){ apPanel.hidden=true; }
+function apHide(){ apPanel.hidden=true; apBody(); }
 function apUi(){
   $('apPlay').textContent=apPlaying?'⏸':'▶'; $('apPlay').setAttribute('aria-label',apPlaying?'إيقاف مؤقت':'تشغيل');
-  fab2.classList.toggle('on',apOn);
+  fab2.classList.toggle('on',apOn); apBody();
   try{ if('mediaSession' in navigator) navigator.mediaSession.playbackState=apPlaying?'playing':'paused'; }catch(e){}
 }
 function apMark(v){
@@ -1244,10 +1251,10 @@ function apToggle(){
 $('apPlay').addEventListener('click',apToggle);
 $('apNextB').addEventListener('click',()=>{ if(!apOn){ const v=curVerse(); if(v) apPlayVerse(v); } else apStep(1); });
 $('apPrev').addEventListener('click',()=>{ if(!apOn){ const v=curVerse(); if(v) apPlayVerse(v); } else apStep(-1); });
-$('apRec').addEventListener('change',()=>{ apRec=$('apRec').value; store.set('apRec',apRec); if(apOn&&apV) apPlayVerse(apV); });
-$('apRepSel').addEventListener('change',()=>{ apRepN=+$('apRepSel').value; store.set('apRep',apRepN); apLeft=apRepN; });
+$('apRec').addEventListener('change',()=>{ apRec=$('apRec').value; store.set('apRec',apRec); store.set('apChosen',true); apNm(); $('apSel').hidden=true; if(apOn&&apV) apPlayVerse(apV); });
+$('apRepSel').addEventListener('change',()=>{ apRepN=+$('apRepSel').value; store.set('apRep',apRepN); apLeft=apRepN; apNm(); $('apSel').hidden=true; });
 $('apX').addEventListener('click',()=>{ apStop(); apHide(); });
-fab2.addEventListener('click',()=>{ const o=apPanel.hidden; setPanel.hidden=true; goPanel.hidden=true; fsPanel.hidden=true; apPanel.hidden=!o; });
+fab2.addEventListener('click',()=>{ const o=apPanel.hidden; setPanel.hidden=true; goPanel.hidden=true; fsPanel.hidden=true; apPanel.hidden=!o; if(o) $('apSel').hidden=!!store.get('apChosen',false); apBody(); });
 (function(){ const bar=document.querySelector('.bar'); const pos=()=>{ fab2.style.bottom=(bar.offsetHeight+14+56)+'px'; }; pos(); addEventListener('resize',pos); if(window.ResizeObserver) new ResizeObserver(pos).observe(bar); })();
 document.addEventListener('visibilitychange',()=>{ /* الصوت يستمر مع قفل الشاشة */ });
 // ===== إخفاء الترويسة بعد ٣٠ ثانية، وتنبيه الأرقام، وإيقاف المايك عند الإغلاق =====
