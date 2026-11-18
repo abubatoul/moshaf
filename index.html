@@ -138,6 +138,17 @@ header .hb{flex:none;font:inherit;font-size:.85rem;border:1px solid var(--line);
 [hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 .retry{font:inherit;background:var(--accent);color:var(--accent-fg);border:0;border-radius:10px;padding:.6rem 1.2rem;cursor:pointer;margin-top:1rem}
+#micBtn,#offBtn{display:none!important}
+#fab{position:fixed;z-index:9;inset-inline-end:14px;bottom:9rem;width:3.4rem;height:3.4rem;border-radius:50%;border:0;background:var(--accent);color:var(--accent-fg);font-size:1.5rem;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.3);cursor:pointer;padding:0}
+#fab[hidden]{display:none}
+body.vo #fab{background:#d33;color:#fff;animation:fabp 1.4s infinite}
+@keyframes fabp{50%{box-shadow:0 0 0 10px rgba(221,51,51,.18)}}
+#fsPanel{max-width:40rem;margin:0 auto .6rem;display:flex;align-items:center;gap:.8rem;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.4rem .9rem;box-shadow:0 6px 20px rgba(0,0,0,.2)}
+#fsPanel[hidden]{display:none}
+#fsPanel .s1{font-family:var(--font-quran);font-size:1rem;color:var(--muted)}
+#fsPanel .s2{font-family:var(--font-quran);font-size:1.8rem;color:var(--fg)}
+body.vo #fsPanel{display:none}
+.tools{grid-template-columns:repeat(5,1fr)!important}
 </style>
 </head>
 <body>
@@ -162,6 +173,7 @@ html{-webkit-text-size-adjust:100%}
 
 <div class="bar">
   <div id="micBar" hidden><i class="dot"></i><span id="micTxt" class="t"></span><button id="micStop" type="button">إيقاف</button></div>
+  <div id="fsPanel" dir="ltr" hidden><span class="s1">أ</span><input type="range" id="fsR" min="1.3" max="3.6" step="0.1" aria-label="حجم الخط" style="flex:1"><span class="s2">أ</span></div>
   <div id="setPanel" class="set" hidden>
     <div class="row"><span class="lbl">الخلفية</span>
       <div class="seg" id="segTheme"><button data-v="auto">تلقائي</button><button data-v="light">نهاري</button><button data-v="paper">ورقي</button><button data-v="dark">ليلي</button></div></div>
@@ -191,14 +203,14 @@ html{-webkit-text-size-adjust:100%}
     </div>
   </div>
   <div class="tools">
-    <button id="fm" aria-label="تصغير الخط">أ−</button>
-    <button id="fp" aria-label="تكبير الخط">أ+</button>
+    <button id="ft" aria-label="حجم الخط">أ</button>
     <button id="se" aria-label="بحث في القرآن">بحث</button>
     <button id="gd" aria-pressed="true" aria-label="تظليل الآية الحالية">تظليل</button>
     <button id="go" aria-label="الذهاب إلى آية">اذهب</button>
     <button id="st" aria-label="خيارات القراءة">خيارات</button>
   </div>
 </div>
+<button id="fab" type="button" aria-label="القراءة الصوتية">🎤</button>
 <div id="gline" aria-hidden="true"></div>
 <div id="sheet" hidden role="dialog" aria-label="البحث في القرآن">
   <div class="sh-top">
@@ -278,6 +290,8 @@ async function fget(path,ms){
   try{ const r=await fetch(DB+path,{signal:ac.signal}); if(!r.ok) throw new Error('http '+r.status); return await r.json(); }
   finally{ clearTimeout(tm); }
 }
+const LOCAL_Q=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+let localP=null; function localAll(){ return localP||(localP=fetch('quran.json').then(r=>{ if(!r.ok) throw new Error('local'); return r.json(); })); }
 let quranVer=null;
 async function getVer(){
   if (quranVer!==null) return quranVer;
@@ -286,6 +300,7 @@ async function getVer(){
 }
 async function loadJuz(j){
   if (juz[j]) return juz[j];
+  if (LOCAL_Q){ const all=await localAll(); const v=(all[j]||[]).map(x=>[Number(x[0]),Number(x[1]),String(x[2])]); if(!v.length) throw new Error('empty'); juz[j]=v; return v; }
   const ver=await getVer();
   const c=store.get('j'+j,null);
   if (c && c.v && c.v.length && (ver===null || c.ver===ver)){ juz[j]=c.v; return c.v; }
@@ -423,9 +438,13 @@ $('next').addEventListener('click',()=>{ stop(); if(cur<30) render(cur+1); });
 // ---- الخط والمظهر ----
 let fs=store.get('fs',2);
 function applyFs(){ document.documentElement.style.setProperty('--fs',fs+'rem'); store.set('fs',fs); }
-$('fp').addEventListener('click',()=>{ fs=Math.min(3.6,+(fs+.2).toFixed(1)); applyFs(); });
-$('fm').addEventListener('click',()=>{ fs=Math.max(1.3,+(fs-.2).toFixed(1)); applyFs(); });
 applyFs();
+const fsPanel=$('fsPanel'), fsR=$('fsR'); let fsT=0;
+fsR.value=fs;
+function fsArm(){ clearTimeout(fsT); fsT=setTimeout(()=>{ fsPanel.hidden=true; },3500); }
+$('ft').addEventListener('click',()=>{ const o=fsPanel.hidden; setPanel.hidden=true; goPanel.hidden=true; fsPanel.hidden=!o; if(o){ fsR.value=fs; fsArm(); } });
+fsR.addEventListener('input',()=>{ fs=Math.min(3.6,Math.max(1.3,+(+fsR.value).toFixed(1))); applyFs(); fsArm(); });
+['pointermove','touchmove','pointerdown'].forEach(ev=>fsPanel.addEventListener(ev,fsArm,{passive:true}));
 function setSeg(id,val){ document.querySelectorAll('#'+id+' button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v)===String(val)?'true':'false')); }
 function applyTheme(v){ if(v==='auto') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',v); store.set('theme',v); setSeg('segTheme',v); }
 function applyLh(v){ document.documentElement.style.setProperty('--lh',v); store.set('lh',v); setSeg('segLh',v); }
@@ -439,11 +458,11 @@ document.querySelectorAll('#segSp button').forEach(b=>b.addEventListener('click'
 applyFont(store.get('font','amiri')); applyTheme(store.get('theme','auto')); applyLh(String(store.get('lh','2.2'))); setSeg('segSp',speed);
 speedEl.addEventListener('input',()=>setSeg('segSp',''));
 const setPanel=$('setPanel');
-$('st').addEventListener('click',()=>{ setPanel.hidden=!setPanel.hidden; goPanel.hidden=true; if(!setPanel.hidden) hideVp(); });
+$('st').addEventListener('click',()=>{ setPanel.hidden=!setPanel.hidden; goPanel.hidden=true; fsPanel.hidden=true; if(!setPanel.hidden) hideVp(); });
 // إغلاق الخيارات/اذهب عند لمس أي مكان خارجها
 let panelJustClosed=false;
 document.addEventListener('pointerdown',e=>{
-  [[setPanel,'#st'],[goPanel,'#go']].forEach(([pn,btn])=>{ if(!pn.hidden && !pn.contains(e.target) && !(e.target.closest&&e.target.closest(btn))){ pn.hidden=true; panelJustClosed=true; setTimeout(()=>{panelJustClosed=false},450); } });
+  [[setPanel,'#st'],[goPanel,'#go'],[fsPanel,'#ft']].forEach(([pn,btn])=>{ if(!pn.hidden && !pn.contains(e.target) && !(e.target.closest&&e.target.closest(btn))){ pn.hidden=true; panelJustClosed=true; setTimeout(()=>{panelJustClosed=false},450); } });
 },true);
 
 // ---- خط التظليل: تظليل الآية عند خط القراءة ----
@@ -515,7 +534,7 @@ const norm=s=>s.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));
 function syncGo(){ const s=+goSurah.value; goAyah.placeholder='١ – '+ar(counts[s]); goErr.textContent=''; }
 goSurah.addEventListener('change',()=>{ goAyah.value=''; syncGo(); goAyah.focus(); });
 $('go').addEventListener('click',()=>{
-  goPanel.hidden=!goPanel.hidden; setPanel.hidden=true;
+  goPanel.hidden=!goPanel.hidden; setPanel.hidden=true; fsPanel.hidden=true;
   if (!goPanel.hidden){ goSurah.value=surahSel.value; goAyah.value=''; syncGo(); goAyah.focus(); }
 });
 function doGo(){
@@ -662,8 +681,15 @@ $('instBtn').addEventListener('click',()=>{
 });
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')) $('instSheet').hidden=true; });
+// تنزيل القرآن بهدوء في الخلفية بعد أول فتح (بدون زر)
+(function(){
+  if (LOCAL_Q) return;
+  try{ const c=navigator.connection; if(c && c.saveData) return; }catch(e){}
+  const go=async()=>{ for (let j=1;j<=30;j++){ if(juz[j]) continue; try{ await loadJuz(j); }catch(e){ return; } await new Promise(r=>setTimeout(r,400)); } };
+  setTimeout(()=>{ if('requestIdleCallback' in window) requestIdleCallback(go,{timeout:8000}); else go(); },6000);
+})();
 if (typeof ensureAll==='function'){
-  $('offBtn').hidden=false;
+  $('offBtn').hidden=true;
   $('offBtn').addEventListener('click',async()=>{
     $('offBtn').disabled=true; setNote('جاري التحميل… ٠ / ٣٠');
     try{ await ensureAll(n=>setNote('جاري التحميل… '+ar(n)+' / ٣٠')); setNote('تم تحميل القرآن كاملًا على جهازك ✓ . النص يُفتح الآن بلا إنترنت، لكن الصفحة نفسها تحتاج اتصال عند فتحها.'); }
@@ -1131,6 +1157,14 @@ addEventListener('beforeunload',()=>{ if(voiceOn) vStop('تم الإيقاف'); 
 let vHidT=0;
 document.addEventListener('visibilitychange',()=>{ clearTimeout(vHidT); if(document.hidden && voiceOn) vHidT=setTimeout(()=>{ if(document.hidden && voiceOn) vStop('تم الإيقاف'); },10000); });
 $('micBtn').addEventListener('click',()=>{ if(voiceOn) vStop(); else vStart(); });
+(function(){
+  const fab=$('fab'), bar=document.querySelector('.bar');
+  if (!SR){ fab.hidden=true; return; }
+  const pos=()=>{ fab.style.bottom=(bar.offsetHeight+14)+'px'; };
+  pos(); addEventListener('resize',pos);
+  if (window.ResizeObserver) new ResizeObserver(pos).observe(bar);
+  fab.addEventListener('click',()=>{ if(voiceOn) vStop(); else vStart(); });
+})();
 function fixUi(){ $('fixBtn').textContent='✏️ تصحيح القراءة: '+(vFix?'مفعّل':'معطّل'); $('fixBtn').setAttribute('aria-pressed',vFix); }
 fixUi();
 $('fixBtn').addEventListener('click',()=>{ vFix=!vFix; store.set('vfix',vFix); fixUi(); if(!vFix){ document.querySelectorAll('#text .w.miss').forEach(x=>x.replaceWith(document.createTextNode(x.textContent))); document.querySelectorAll('#text .v').forEach(v=>{ v._miss=null; }); } });
