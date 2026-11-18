@@ -76,7 +76,7 @@ input[type=range]{width:100%;accent-color:var(--accent);margin:0;height:1.6rem}
 .v.jump{box-shadow:0 0 0 3px var(--hl)}
 #gline{position:fixed;top:38vh;inset-inline-start:0;width:12px;height:3px;background:var(--accent);opacity:.7;border-radius:0 3px 3px 0;z-index:8;pointer-events:none}
 .go{max-width:40rem;margin:0 auto .7rem;display:grid;grid-template-columns:1fr 6rem auto;gap:.5rem;align-items:center}
-.go input{font:inherit;font-size:.95rem;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:.45rem .5rem;min-width:0;text-align:center}
+.go input{font:inherit;font-size:16px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:.45rem .5rem;min-width:0;text-align:center}
 .go[hidden],.set[hidden]{display:none}
 .set{max-width:40rem;margin:0 auto .7rem;display:grid;gap:.5rem}
 .set .row{display:flex;align-items:center;gap:.5rem}
@@ -561,7 +561,7 @@ setGuide(guideOn);
 const goPanel=$('goPanel'), goSurah=$('goSurah'), goAyah=$('goAyah'), goErr=$('goErr');
 for (let s=1;s<=114;s++){ const o=document.createElement('option'); o.value=s; o.textContent=ar(s)+". "+names[s]; goSurah.appendChild(o); }
 const norm=s=>s.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-function syncGo(){ const s=+goSurah.value; goAyah.placeholder='١ – '+ar(counts[s]); goErr.textContent=''; }
+function syncGo(){ const s=+goSurah.value; goAyah.placeholder='رقم الآية'; goErr.textContent=''; }
 goSurah.addEventListener('change',()=>{ goAyah.value=''; syncGo(); goAyah.focus(); });
 $('go').addEventListener('click',()=>{
   goPanel.hidden=!goPanel.hidden; setPanel.hidden=true; fsPanel.hidden=true; if(typeof apHide==='function') apHide();
@@ -710,7 +710,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٩ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫١٠ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
