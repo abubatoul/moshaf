@@ -149,6 +149,18 @@ body.vo #fab{background:#d33;color:#fff;animation:fabp 1.4s infinite}
 #fsPanel .s2{font-family:var(--font-quran);font-size:1.8rem;color:var(--fg)}
 body.vo #fsPanel{display:none}
 .tools{grid-template-columns:repeat(5,1fr)!important}
+#fab2{position:fixed;z-index:9;inset-inline-end:14px;bottom:13rem;width:3rem;height:3rem;border-radius:50%;border:1.5px solid var(--accent);background:var(--surface);color:var(--accent);font-size:1.3rem;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer;padding:0}
+#fab2.on{background:var(--accent);color:var(--accent-fg)}
+body.vo #fab2,body.vo #apPanel{display:none}
+#apPanel{max-width:40rem;margin:0 auto .6rem;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:.5rem .7rem;box-shadow:0 6px 20px rgba(0,0,0,.2);display:grid;gap:.5rem}
+#apPanel[hidden]{display:none}
+#apPanel .ap-row{display:flex;gap:.5rem;align-items:center}
+#apPanel select{flex:1;max-width:none;font-size:.85rem;padding:.35rem .4rem}
+#apPanel .ap-x{flex:none;font:inherit;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;height:2.2rem;padding:0 .8rem;cursor:pointer}
+#apPanel .ap-ctl{justify-content:center;gap:1rem;direction:ltr}
+#apPanel .ap-ctl button{font:inherit;font-size:1.3rem;width:3rem;height:3rem;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;padding:0}
+#apPanel .ap-ctl #apPlay{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);width:3.4rem;height:3.4rem}
+#apPanel .ap-note{margin:0;text-align:center;font-size:.75rem;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -173,6 +185,11 @@ body.vo #fsPanel{display:none}
 
 <div class="bar">
   <div id="micBar" hidden><i class="dot"></i><span id="micTxt" class="t"></span><button id="micStop" type="button">إيقاف</button></div>
+  <div id="apPanel" hidden>
+    <div class="ap-row"><select id="apRec" aria-label="القارئ"></select><select id="apRepSel" aria-label="تكرار الآية"><option value="1">بلا تكرار</option><option value="2">مرتين</option><option value="3">٣ مرات</option><option value="5">٥ مرات</option></select><button class="ap-x" id="apX" type="button" aria-label="إغلاق">✕</button></div>
+    <div class="ap-row ap-ctl"><button id="apPrev" type="button" aria-label="الآية السابقة">⏮</button><button id="apPlay" type="button" aria-label="تشغيل">▶</button><button id="apNextB" type="button" aria-label="الآية التالية">⏭</button></div>
+    <p class="ap-note">الصوت من EveryAyah.com · يحتاج إنترنت</p>
+  </div>
   <div id="fsPanel" dir="ltr" hidden><span class="s1">أ</span><input type="range" id="fsR" min="1.3" max="3.6" step="0.1" aria-label="حجم الخط" style="flex:1"><span class="s2">أ</span></div>
   <div id="setPanel" class="set" hidden>
     <div class="row"><span class="lbl">الخلفية</span>
@@ -211,6 +228,7 @@ body.vo #fsPanel{display:none}
     <button id="st" aria-label="خيارات القراءة">خيارات</button>
   </div>
 </div>
+<button id="fab2" type="button" aria-label="استماع للقارئ">🎧</button>
 <button id="fab" type="button" aria-label="القراءة الصوتية">🎤</button>
 <div id="gline" aria-hidden="true"></div>
 <div id="sheet" hidden role="dialog" aria-label="البحث في القرآن">
@@ -443,7 +461,7 @@ applyFs();
 const fsPanel=$('fsPanel'), fsR=$('fsR'); let fsT=0;
 fsR.value=fs;
 function fsArm(){ clearTimeout(fsT); fsT=setTimeout(()=>{ fsPanel.hidden=true; },3500); }
-$('ft').addEventListener('click',()=>{ const o=fsPanel.hidden; setPanel.hidden=true; goPanel.hidden=true; fsPanel.hidden=!o; if(o){ fsR.value=fs; fsArm(); } });
+$('ft').addEventListener('click',()=>{ const o=fsPanel.hidden; setPanel.hidden=true; goPanel.hidden=true; if(typeof apHide==='function') apHide(); fsPanel.hidden=!o; if(o){ fsR.value=fs; fsArm(); } });
 fsR.addEventListener('input',()=>{ fs=Math.min(3.6,Math.max(1.3,+(+fsR.value).toFixed(1))); applyFs(); fsArm(); });
 ['pointermove','touchmove','pointerdown'].forEach(ev=>fsPanel.addEventListener(ev,fsArm,{passive:true}));
 function setSeg(id,val){ document.querySelectorAll('#'+id+' button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v)===String(val)?'true':'false')); }
@@ -459,7 +477,7 @@ document.querySelectorAll('#segSp button').forEach(b=>b.addEventListener('click'
 applyFont(store.get('font','amiri')); applyTheme(store.get('theme','auto')); applyLh(String(store.get('lh','2.2'))); setSeg('segSp',speed);
 speedEl.addEventListener('input',()=>setSeg('segSp',''));
 const setPanel=$('setPanel');
-$('st').addEventListener('click',()=>{ setPanel.hidden=!setPanel.hidden; goPanel.hidden=true; fsPanel.hidden=true; if(!setPanel.hidden) hideVp(); });
+$('st').addEventListener('click',()=>{ setPanel.hidden=!setPanel.hidden; goPanel.hidden=true; fsPanel.hidden=true; if(typeof apHide==='function') apHide(); if(!setPanel.hidden) hideVp(); });
 // إغلاق الخيارات/اذهب عند لمس أي مكان خارجها
 let panelJustClosed=false;
 document.addEventListener('pointerdown',e=>{
@@ -509,7 +527,7 @@ function versesAtLine(y){
 let curSet=new Set();
 function updateGuide(){
   gTick=0;
-  if (typeof voiceOn!=='undefined' && voiceOn) return;
+  if ((typeof voiceOn!=='undefined' && voiceOn)||(typeof apOn!=='undefined' && apOn)) return;
   if (!guideOn){ curSet.forEach(v=>v.classList.remove('cur')); curSet=new Set(); return; }
   const now=new Set(versesAtLine(Math.round(innerHeight*0.38)));
   curSet.forEach(v=>{ if(!now.has(v)) v.classList.remove('cur'); });
@@ -535,7 +553,7 @@ const norm=s=>s.replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d));
 function syncGo(){ const s=+goSurah.value; goAyah.placeholder='١ – '+ar(counts[s]); goErr.textContent=''; }
 goSurah.addEventListener('change',()=>{ goAyah.value=''; syncGo(); goAyah.focus(); });
 $('go').addEventListener('click',()=>{
-  goPanel.hidden=!goPanel.hidden; setPanel.hidden=true; fsPanel.hidden=true;
+  goPanel.hidden=!goPanel.hidden; setPanel.hidden=true; fsPanel.hidden=true; if(typeof apHide==='function') apHide();
   if (!goPanel.hidden){ goSurah.value=surahSel.value; goAyah.value=''; syncGo(); goAyah.focus(); }
 });
 function doGo(){
@@ -681,7 +699,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٣ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٤ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -980,7 +998,7 @@ function vHandle(e){
 }
 function vStart(){
   if (!SR){ setNote('المتصفح لا يدعم التعرف على الصوت.'); return; }
-  stop(); vIdx=null; vBuild(); voiceOn=true; vIdleArm(); document.body.classList.add('vo'); vPos=-1; vHits=new Set(); vFinal=-1; vMU=null; vPrevBuf=[]; vCurHeard=[]; vMissedN=0; vCmdPos=0; vAdv=false; vBase=0; vFullLen=0; vRawLen=0;
+  stop(); if(typeof apStop==='function') apStop(); vIdx=null; vBuild(); voiceOn=true; vIdleArm(); document.body.classList.add('vo'); vPos=-1; vHits=new Set(); vFinal=-1; vMU=null; vPrevBuf=[]; vCurHeard=[]; vMissedN=0; vCmdPos=0; vAdv=false; vBase=0; vFullLen=0; vRawLen=0;
   document.querySelectorAll('#text .w.miss').forEach(x=>x.replaceWith(document.createTextNode(x.textContent))); document.querySelectorAll('#text .v').forEach(v=>{ v._miss=null; }); $('text').normalize(); vIdx=null; vBuild(); vWakeOn();
   curSet.forEach(v=>v.classList.remove('cur')); curSet=new Set();
   $('micBar').hidden=false; $('micTxt').textContent='جارٍ تشغيل الميكروفون…';
@@ -1152,6 +1170,86 @@ function qStart(){
   clearTimeout(qHard); qHard=setTimeout(()=>{ if(!qActive) return; if(!qLast){ qinfo.textContent='لم يُسمع صوت واضح. أعد المحاولة.'; qFin(true); } else qFin(); },10000);
 }
 $('qmic').addEventListener('click',()=>{ closeSheet(); if(voiceOn) return; vStart(); });
+// ===== مشغّل صوت القارئ (آية بآية من EveryAyah) =====
+const REC={afasy:['العفاسي','Alafasy_128kbps'],bm:['عبدالباسط · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط · مجوّد','Abdul_Basit_Mujawwad_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps']};
+let apRec=store.get('apRec','afasy'); if(!REC[apRec]) apRec='afasy';
+let apRepN=store.get('apRep',1); if(![1,2,3,5].includes(apRepN)) apRepN=1;
+let apOn=false, apPlaying=false, apV=null, apLeft=1, apQueue=[], apBusy=false, apPf=null;
+const apAudio=new Audio(); apAudio.preload='auto';
+const apPanel=$('apPanel'), fab2=$('fab2');
+for (const k in REC){ const o=document.createElement('option'); o.value=k; o.textContent=REC[k][0]; $('apRec').appendChild(o); }
+$('apRec').value=apRec; $('apRepSel').value=String(apRepN);
+const apPad=(n,l)=>String(n).padStart(l,'0');
+function apUrl(s,a,rec){ return 'https://everyayah.com/data/'+REC[rec||apRec][1]+'/'+apPad(s,3)+apPad(a,3)+'.mp3'; }
+function apList(v){ const s=+v.dataset.s, a=+v.dataset.a, l=[]; if(a===1&&s!==1&&s!==9) l.push(apUrl(1,1)); l.push(apUrl(s,a)); return l; }
+function apHide(){ apPanel.hidden=true; }
+function apUi(){
+  $('apPlay').textContent=apPlaying?'⏸':'▶'; $('apPlay').setAttribute('aria-label',apPlaying?'إيقاف مؤقت':'تشغيل');
+  fab2.classList.toggle('on',apOn);
+  try{ if('mediaSession' in navigator) navigator.mediaSession.playbackState=apPlaying?'playing':'paused'; }catch(e){}
+}
+function apMark(v){
+  document.querySelectorAll('#text .v.cur').forEach(x=>x.classList.remove('cur')); v.classList.add('cur'); curSet=new Set();
+  const r=v.getBoundingClientRect(), line=innerHeight*0.38;
+  if (r.top<innerHeight*0.12 || r.top>innerHeight*0.45 || r.bottom>innerHeight*0.62) scrollBy({top:r.top-line*0.8,behavior:'smooth'});
+}
+function apMeta(v){
+  try{ if('mediaSession' in navigator){
+    navigator.mediaSession.metadata=new MediaMetadata({title:'سورة '+names[+v.dataset.s]+' · آية '+ar(+v.dataset.a),artist:REC[apRec][0],album:'القرآن الكريم'});
+    navigator.mediaSession.setActionHandler('play',()=>apToggle()); navigator.mediaSession.setActionHandler('pause',()=>apToggle());
+    navigator.mediaSession.setActionHandler('nexttrack',()=>apStep(1)); navigator.mediaSession.setActionHandler('previoustrack',()=>apStep(-1));
+  } }catch(e){}
+}
+function apVerses(){ return [...document.querySelectorAll('#text .v')]; }
+function apPrefetch(v){
+  try{ const all=apVerses(), i=all.indexOf(v), n=all[i+1]; if(!n) return; const l=apList(n); apPf=new Audio(); apPf.preload='auto'; apPf.src=l[0]; }catch(e){}
+}
+function apPlayVerse(v){
+  if (voiceOn) vStop(); stop();
+  apOn=true; apPlaying=true; apV=v; apQueue=apList(v); apLeft=apRepN;
+  apMark(v); apMeta(v); apPrefetch(v);
+  apAudio.src=apQueue.shift(); const p=apAudio.play(); if(p&&p.catch) p.catch(apFail); apUi();
+}
+function apFail(){ if(!apOn) return; apStop(); toast('تعذر تشغيل الصوت. تحقق من الاتصال'); }
+function apStop(){
+  const was=apOn; apOn=false; apPlaying=false; apQueue=[]; try{ apAudio.pause(); apAudio.removeAttribute('src'); apAudio.load(); }catch(e){}
+  if (apV){ apV.classList.remove('cur'); } apV=null; apUi(); if(was) scheduleGuide();
+}
+async function apStep(dir){
+  if (apBusy) return; apBusy=true;
+  try{
+    let all=apVerses(), i=apV?all.indexOf(apV):-1, t=all[i+dir];
+    if (!t){
+      if (dir>0 && cur<30){ await render(cur+1); }
+      else if (dir<0 && cur>1){ await render(cur-1); }
+      else { apStop(); if(dir>0) toast('اكتمل المصحف'); return; }
+      for (let k=0;k<60;k++){ all=apVerses(); if(all.length) break; await new Promise(r=>setTimeout(r,100)); }
+      t=dir>0?all[0]:all[all.length-1];
+    }
+    if (t && apOn) apPlayVerse(t);
+  } finally { apBusy=false; }
+}
+apAudio.addEventListener('ended',()=>{
+  if (!apOn||!apV) return;
+  if (apQueue.length){ apAudio.src=apQueue.shift(); apAudio.play().catch(apFail); return; }
+  if (apLeft>1){ apLeft--; apAudio.src=apUrl(+apV.dataset.s,+apV.dataset.a); apAudio.play().catch(apFail); return; }
+  apStep(1);
+});
+apAudio.addEventListener('error',()=>{ if(apOn && apAudio.getAttribute('src')) apFail(); });
+function apToggle(){
+  if (!apOn){ const v=curVerse(); if(v) apPlayVerse(v); return; }
+  if (apPlaying){ apAudio.pause(); apPlaying=false; } else { apAudio.play().catch(apFail); apPlaying=true; }
+  apUi();
+}
+$('apPlay').addEventListener('click',apToggle);
+$('apNextB').addEventListener('click',()=>{ if(!apOn){ const v=curVerse(); if(v) apPlayVerse(v); } else apStep(1); });
+$('apPrev').addEventListener('click',()=>{ if(!apOn){ const v=curVerse(); if(v) apPlayVerse(v); } else apStep(-1); });
+$('apRec').addEventListener('change',()=>{ apRec=$('apRec').value; store.set('apRec',apRec); if(apOn&&apV) apPlayVerse(apV); });
+$('apRepSel').addEventListener('change',()=>{ apRepN=+$('apRepSel').value; store.set('apRep',apRepN); apLeft=apRepN; });
+$('apX').addEventListener('click',()=>{ apStop(); apHide(); });
+fab2.addEventListener('click',()=>{ const o=apPanel.hidden; setPanel.hidden=true; goPanel.hidden=true; fsPanel.hidden=true; apPanel.hidden=!o; });
+(function(){ const bar=document.querySelector('.bar'); const pos=()=>{ fab2.style.bottom=(bar.offsetHeight+14+56)+'px'; }; pos(); addEventListener('resize',pos); if(window.ResizeObserver) new ResizeObserver(pos).observe(bar); })();
+document.addEventListener('visibilitychange',()=>{ /* الصوت يستمر مع قفل الشاشة */ });
 // ===== إخفاء الترويسة بعد ٣٠ ثانية، وتنبيه الأرقام، وإيقاف المايك عند الإغلاق =====
 const hdr=document.querySelector('header'), hdrLbl=document.createElement('div'), toastEl=document.createElement('div');
 hdrLbl.id='hdrLabel'; hdrLbl.hidden=true; toastEl.id='toast'; toastEl.hidden=true; document.body.append(hdrLbl,toastEl);
