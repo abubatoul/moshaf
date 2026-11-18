@@ -674,7 +674,7 @@ if (typeof ensureAll==='function'){
 
 // ---- القراءة الصوتية (تجريبي): تتبّع صوتك وتظليل الآية ----
 let voiceOn=false, vRec=null, vIdx=null, vPos=-1, vRestart=0, vFirst=true;
-let vMU=null, vPrevBuf=[], vCurHeard=[], vIdleT=0;
+let vMU=null, vPrevBuf=[], vCurHeard=[], vIdleT=0, vBase=0, vFullLen=0, vRawLen=0;
 const V_IDLE=60000; // إيقاف المايك تلقائيًا إذا لم تُسمع قراءة دقيقة
 function vIdleArm(){ clearTimeout(vIdleT); if(voiceOn) vIdleT=setTimeout(()=>{ if(voiceOn) vStop('توقف المايك لعدم القراءة'); },V_IDLE); }
 let vFix=false, vLearn=store.get('vlearn',{}), vLearnT=0, vHits=new Set(), vFinal=-1, vMissedN=0, vAdv=false, vCmdPos=0, vCmdT=0, vEndT=0, vWake=null, vPairs=[], vScore=0, vSeen=new Set();
@@ -801,15 +801,15 @@ function vMark(v,add){
   v.insertBefore(frag,nodes[0]); nodes.forEach(n=>n.remove()); vMissedN+=fresh;
 }
 async function vWaitRender(J){ for (let i=0;i<60;i++){ if (cur===J && $('text').querySelector('.v')) return true; await vSleep(100); } return false; }
-function vReset(){ clearTimeout(vEndT); vIdx=null; vPos=-1; vHits=new Set(); vFinal=-1; vMU=null; if(vCurV){ vCurV.classList.remove('cur'); vCurV=null; } }
+function vReset(base){ vCmdPos=Math.max(vCmdPos,vRawLen); vBase=(base===undefined?vFullLen:base); vCurHeard=[]; vPrevBuf=[]; clearTimeout(vEndT); vIdx=null; vPos=-1; vHits=new Set(); vFinal=-1; vMU=null; if(vCurV){ vCurV.classList.remove('cur'); vCurV=null; } }
 async function vAdvance(){
-  if (vAdv||vJumping) return; vAdv=true; vJumping=true;
+  if (vAdv||vJumping) return; vAdv=true; vJumping=true; const base0=vFullLen;
   try{
     vBuild(); vMarkPass(vIdx.words.length,vWin());
     const J=cur;
     if (J>=30){ vJumping=false; vAdv=false; vStop('اكتمل المصحف'); return; }
     stop(); await render(J+1); await vWaitRender(J+1); window.scrollTo(0,0);
-    vReset(); vBuild();
+    vReset(base0); vBuild();
     $('micTxt').textContent='الجزء '+ar(J+1)+'. تابع القراءة'; toast('الجزء '+ar(J+1));
   } finally { vJumping=false; vAdv=false; vMiss=0; }
 }
@@ -833,20 +833,21 @@ function vSurahByName(txt){
   for (let n=1;n<=114;n++){ const nm=c(names[n]); if (nm===t || (t.length>=4&&wEq(t,nm))) return n; }
   return 0;
 }
-async function vGoTo(S,A){
-  if (vJumping) return; vJumping=true;
+async function vGoTo(S,A,base){
+  if (vJumping) return; vJumping=true; if(base===undefined) base=vFullLen;
   try{
     if(!counts[S]||A>counts[S]||A<1) A=1;
     const J=ayahJuz[S+':'+A]; if(!J) return;
     stop(); rememberBack(); await render(J,null,{s:S,a:A});
-    await vWaitRender(J); vReset(); vBuild();
+    await vWaitRender(J); vReset(base); vBuild();
     $('micTxt').textContent='الانتقال إلى سورة '+names[S]+' · آية '+ar(A); toast('سورة '+names[S]+' · الجزء '+ar(J));
   } catch(e){ $('micTxt').textContent='تعذر الانتقال. تحقق من الاتصال.'; }
   finally { vJumping=false; vMiss=0; }
 }
-async function vGoJuz(J,tries){
-  if (vJumping){ if((tries||0)<8) setTimeout(()=>vGoJuz(J,(tries||0)+1),500); return; } vJumping=true;
-  try{ stop(); rememberBack(); await render(J); await vWaitRender(J); window.scrollTo(0,0); vReset(); vBuild(); $('micTxt').textContent='الانتقال إلى الجزء '+ar(J); toast('الجزء '+ar(J)); }
+async function vGoJuz(J,tries,base){
+  if (base===undefined) base=vFullLen;
+  if (vJumping){ if((tries||0)<8) setTimeout(()=>vGoJuz(J,(tries||0)+1,base),500); return; } vJumping=true;
+  try{ stop(); rememberBack(); await render(J); await vWaitRender(J); window.scrollTo(0,0); vReset(base); vBuild(); $('micTxt').textContent='الانتقال إلى الجزء '+ar(J); toast('الجزء '+ar(J)); }
   finally { vJumping=false; vMiss=0; }
 }
 function vCommand(txt){ // يرجع true إذا نُفّذ أمر
@@ -862,7 +863,7 @@ function vCommand(txt){ // يرجع true إذا نُفّذ أمر
   }
   if (/ (رجوع|الرجوع|ارجع|الموضع السابق|المكان السابق)$/.test(tail)){
     vCmdPos=raw.length;
-    if (backV){ stop(); const b=backV; rememberBack(); vJumping=true; Promise.resolve(render(ayahJuz[b.s+':'+b.a],null,b)).then(()=>vWaitRender(ayahJuz[b.s+':'+b.a])).then(()=>{ vReset(); vBuild(); vJumping=false; $('micTxt').textContent='تم الرجوع'; }); }
+    if (backV){ stop(); const b=backV, Bb=vFullLen; rememberBack(); vJumping=true; Promise.resolve(render(ayahJuz[b.s+':'+b.a],null,b)).then(()=>vWaitRender(ayahJuz[b.s+':'+b.a])).then(()=>{ vReset(Bb); vBuild(); vJumping=false; $('micTxt').textContent='تم الرجوع'; }); }
     else $('micTxt').textContent='لا يوجد موضع سابق';
     return true;
   }
@@ -875,10 +876,10 @@ function vCommand(txt){ // يرجع true إذا نُفّذ أمر
       const N=vNumOf(rest.split(' ').slice(0,3).join(' ')); if(!(N>=1&&N<=30)) return false;
       clearTimeout(vCmdT);
       const delay=(!/^\d+$/.test(rest.split(' ')[0]) && N<10)?2000:900; // «الثامن» قد يتبعها «عشر»
-      const L1=raw.length; vCmdT=setTimeout(()=>{ if(!voiceOn) return; vCmdPos=L1; vLastJuz={N,t:Date.now()}; vGoJuz(N); },delay); return true;
+      const L1=raw.length; const B1=vFullLen; vCmdT=setTimeout(()=>{ if(!voiceOn) return; vCmdPos=L1; vLastJuz={N,t:Date.now()}; vGoJuz(N,0,B1); },delay); return true;
     }
     if (vLastJuz && vLastJuz.N<10 && Date.now()-vLastJuz.t<8000){ // تتمة الرقم وصلت متأخرة: عشر / والعشرين …
-      const v=vNumStrict(tail); if ((v===10||v===20||v===30) && vLastJuz.N+v<=30){ const N2=vLastJuz.N+v; vLastJuz=null; vCmdPos=raw.length; vGoJuz(N2); return true; }
+      const v=vNumStrict(tail); if ((v===10||v===20||v===30) && vLastJuz.N+v<=30){ const N2=vLastJuz.N+v; vLastJuz=null; vCmdPos=raw.length; vGoJuz(N2,0,vFullLen); return true; }
     }
   }
   if (false){ let N=0;
@@ -888,8 +889,8 @@ function vCommand(txt){ // يرجع true إذا نُفّذ أمر
     clearTimeout(vCmdT);
     const S=vSurahByName(m[1]); if(!S) return false;
     const A=m[2]?(vNumOf(m[2])||1):1;
-    const L0=raw.length;
-    vCmdT=setTimeout(()=>{ if(!voiceOn) return; vCmdPos=L0; vGoTo(S,A); },900);
+    const L0=raw.length, B0=vFullLen;
+    vCmdT=setTimeout(()=>{ if(!voiceOn) return; vCmdPos=L0; vGoTo(S,A,B0); },900);
     return true;
   }
   return false;
@@ -897,7 +898,9 @@ function vCommand(txt){ // يرجع true إذا نُفّذ أمر
 function vHandle(e){
   if (vJumping) return;
   let txt=''; for (let i=0;i<e.results.length;i++) txt+=' '+e.results[i][0].transcript;
-  const heard=vNormD(txt).split(' ').filter(Boolean); if(!heard.length) return;
+  const rawN=vNormD(txt), all=rawN.split(' ').filter(Boolean); vFullLen=all.length; vRawLen=rawN.length;
+  if (vBase>all.length) vBase=all.length;
+  const heard=all.slice(vBase); if(!heard.length) return;
   vCurHeard=heard; vIdleArm();
   $('micTxt').textContent='المسموع: '+heard.slice(-6).join(' ');
   vBuild();
@@ -931,7 +934,7 @@ function vHandle(e){
 }
 function vStart(){
   if (!SR){ setNote('المتصفح لا يدعم التعرف على الصوت.'); return; }
-  stop(); vIdx=null; vBuild(); voiceOn=true; vIdleArm(); document.body.classList.add('vo'); vPos=-1; vHits=new Set(); vFinal=-1; vMU=null; vPrevBuf=[]; vCurHeard=[]; vMissedN=0; vCmdPos=0; vAdv=false;
+  stop(); vIdx=null; vBuild(); voiceOn=true; vIdleArm(); document.body.classList.add('vo'); vPos=-1; vHits=new Set(); vFinal=-1; vMU=null; vPrevBuf=[]; vCurHeard=[]; vMissedN=0; vCmdPos=0; vAdv=false; vBase=0; vFullLen=0; vRawLen=0;
   document.querySelectorAll('#text .w.miss').forEach(x=>x.replaceWith(document.createTextNode(x.textContent))); document.querySelectorAll('#text .v').forEach(v=>{ v._miss=null; }); $('text').normalize(); vIdx=null; vBuild(); vWakeOn();
   curSet.forEach(v=>v.classList.remove('cur')); curSet=new Set();
   $('micBar').hidden=false; $('micTxt').textContent='جارٍ تشغيل الميكروفون…';
@@ -943,7 +946,7 @@ function vRun(){
   if (!voiceOn) return;
   clearTimeout(vWatch);
   const r=new SR(); vRec=r; r.lang='ar-SA'; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
-  r.onstart=()=>{ clearTimeout(vWatch); vErrN=0; vCmdPos=0; vSeen=new Set(); vPrevBuf=vPrevBuf.concat(vCurHeard).slice(-60); vCurHeard=[]; if(vFirst||/^(جار|إعادة)/.test($('micTxt').textContent)) $('micTxt').textContent='ابدأ القراءة، أو قل: سورة …'; vFirst=false; };
+  r.onstart=()=>{ clearTimeout(vWatch); vErrN=0; vCmdPos=0; vBase=0; vFullLen=0; vRawLen=0; vSeen=new Set(); vPrevBuf=vPrevBuf.concat(vCurHeard).slice(-60); vCurHeard=[]; if(vFirst||/^(جار|إعادة)/.test($('micTxt').textContent)) $('micTxt').textContent='ابدأ القراءة، أو قل: سورة …'; vFirst=false; };
   r.onspeechstart=()=>{ vIdleArm(); if(/^(ابدأ|إعادة)/.test($('micTxt').textContent)) $('micTxt').textContent='جارٍ الاستماع…'; };
   r.onresult=e=>{ vErrN=0; vHandle(e); };
   r.onnomatch=()=>{ $('micTxt').textContent='أعد القراءة'; };
@@ -1011,15 +1014,15 @@ function vgFind(H,minRun,key){
   return best;
 }
 const vSleep=ms=>new Promise(r=>setTimeout(r,ms));
-async function vJump(p,track){
-  if (vJumping) return; vJumping=true;
+async function vJump(p,track,base){
+  if (vJumping) return; vJumping=true; if(base===undefined) base=vFullLen;
   try{
     const S=vg.s[p], A=vg.a[p], J=vg.j[p], K=vg.k[p];
     stop(); rememberBack();
     await render(J,null,{s:S,a:A});
     for (let i=0;i<50;i++){ if (cur===J && $('text').querySelector('.v[data-s="'+S+'"][data-a="'+A+'"]')) break; await vSleep(100); }
     if (track && voiceOn){
-      vIdx=null; vBuild();
+      vReset(base); vBuild();
       let wi=vIdx.words.findIndex(x=>x.k===K && +vIdx.vs[x.vi].dataset.s===S && +vIdx.vs[x.vi].dataset.a===A);
       if (wi<0) wi=vIdx.words.findIndex(x=>+vIdx.vs[x.vi].dataset.s===S && +vIdx.vs[x.vi].dataset.a===A);
       if (wi>=0){ vPos=wi; vShow(wi); }
@@ -1028,7 +1031,7 @@ async function vJump(p,track){
   } finally { vJumping=false; vMiss=0; }
 }
 async function vTryGlobal(heard,loc){
-  if (vgBusy||vJumping) return; vgBusy=true;
+  if (vgBusy||vJumping) return; vgBusy=true; const base0=vFullLen;
   try{
     if (!vg){ $('micTxt').textContent='جارٍ تجهيز البحث…'; await vgBuild(n=>{ $('micTxt').textContent='جارٍ تجهيز البحث… '+ar(n)+' / ٣٠'; }); }
     const key=curKey();
@@ -1039,11 +1042,11 @@ async function vTryGlobal(heard,loc){
       if (!res) continue;
       if (loc!==undefined){ // فحص احترازي: لا نقفز إلا بتطابق أقوى بوضوح من المحلي وفي آية مختلفة
         const cw=(vIdx&&vPos>=0)?vIdx.vs[vIdx.words[vPos].vi]:null, ck=cw?(+cw.dataset.s)*1000+(+cw.dataset.a):-1;
-        if (res.run>=Math.max(4,loc+2) && !(res.verses.size===1 && res.verses.has(ck))){ if (voiceOn) await vJump(res.end,true); return; }
+        if (res.run>=Math.max(4,loc+2) && !(res.verses.size===1 && res.verses.has(ck))){ if (voiceOn) await vJump(res.end,true,base0); return; }
         continue;
       }
       if (res.run>=4 || (res.verses.size===1 && res.run>=2 && H.join('').length>=6 && vMiss>=3)){
-        if (voiceOn) await vJump(res.end,true);
+        if (voiceOn) await vJump(res.end,true,base0);
         return;
       }
     }
