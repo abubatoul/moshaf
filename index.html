@@ -188,6 +188,7 @@ body.vo #fsPanel{display:none}
     <button id="instBtn" class="act" type="button">📲 تثبيت على الشاشة الرئيسية</button>
     <button id="offBtn" class="act" type="button" hidden>⬇ تحميل القرآن كاملًا للاستخدام بلا إنترنت</button>
     <p id="setNote" class="note" hidden></p>
+    <p class="note" id="verNote" style="text-align:center;opacity:.7"></p>
   </div>
   <div id="goPanel" class="go" hidden>
     <select id="goSurah" aria-label="السورة"></select>
@@ -680,6 +681,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
+$('verNote').textContent='الإصدار ٢٫٢ · ٢٠٢٦/١١/١٨ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
