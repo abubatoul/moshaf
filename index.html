@@ -710,7 +710,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٨ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٩ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1186,7 +1186,18 @@ const REC={afasy:['العفاسي','Alafasy_128kbps'],bm:['عبدالباسط ·
 let apRec=store.get('apRec','afasy'); if(!REC[apRec]) apRec='afasy';
 let apRepN=store.get('apRep',1); if(![1,2,3,5].includes(apRepN)) apRepN=1;
 let apOn=false, apPlaying=false, apV=null, apLeft=1, apQueue=[], apBusy=false, apPf=null;
-const apAudio=new Audio(); apAudio.preload='auto';
+const apA1=new Audio(), apA2=new Audio(); apA1.preload='auto'; apA2.preload='auto'; let apAudio=apA1;
+const apSpare=()=>apAudio===apA1?apA2:apA1;
+const AP_SIL='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
+function apPrime(){ try{ const e=apSpare(); e.src=AP_SIL; const p=e.play(); if(p&&p.then) p.then(()=>{ try{e.pause();}catch(_){} }).catch(()=>{}); }catch(e){} }
+function apNextVerse(){ const all=apVerses(), i=apV?all.indexOf(apV):-1; return i>=0?all[i+1]||null:null; }
+function apAhead(){ // الرابط التالي المتوقع بعد الحالي
+  if (!apV) return null;
+  if (apQueue.length) return apQueue[0];
+  if (apLeft>1) return apUrl(+apV.dataset.s,+apV.dataset.a);
+  const n=apNextVerse(); return n?apList(n)[0]:null;
+}
+function apPreload(){ try{ const u=apAhead(), e=apSpare(); if(u && e.getAttribute('src')!==u){ e.src=u; e.load(); } }catch(e){} }
 const apPanel=$('apPanel'), fab2=$('fab2');
 for (const k in REC){ const o=document.createElement('option'); o.value=k; o.textContent=REC[k][0]; $('apRec').appendChild(o); }
 $('apRec').value=apRec; $('apRepSel').value=String(apRepN);
@@ -1217,18 +1228,19 @@ function apMeta(v){
   } }catch(e){}
 }
 function apVerses(){ return [...document.querySelectorAll('#text .v')]; }
-function apPrefetch(v){
+function apPrefetchOld(v){
   try{ const all=apVerses(), i=all.indexOf(v), n=all[i+1]; if(!n) return; const l=apList(n); apPf=new Audio(); apPf.preload='auto'; apPf.src=l[0]; }catch(e){}
 }
 function apPlayVerse(v){
   if (voiceOn) vStop(); stop();
   apOn=true; apPlaying=true; apV=v; apQueue=apList(v); apLeft=apRepN;
-  apMark(v); apMeta(v); apPrefetch(v);
-  apAudio.src=apQueue.shift(); const p=apAudio.play(); if(p&&p.catch) p.catch(apFail); apUi();
+  apMark(v); apMeta(v);
+  try{ apSpare().pause(); }catch(e){}
+  apAudio.src=apQueue.shift(); const p=apAudio.play(); if(p&&p.catch) p.catch(apFail); apUi(); apPrime(); setTimeout(apPreload,400);
 }
-function apFail(){ if(!apOn) return; apStop(); toast('تعذر تشغيل الصوت. تحقق من الاتصال'); }
+function apFail(){ if(!apOn) return; if(document.hidden){ apPlaying=false; apUi(); return; } apStop(); toast('تعذر تشغيل الصوت. تحقق من الاتصال'); }
 function apStop(){
-  const was=apOn; apOn=false; apPlaying=false; apQueue=[]; try{ apAudio.pause(); apAudio.removeAttribute('src'); apAudio.load(); }catch(e){}
+  const was=apOn; apOn=false; apPlaying=false; apQueue=[]; try{ [apA1,apA2].forEach(e=>{ e.pause(); e.removeAttribute('src'); e.load(); }); }catch(e){}
   if (apV){ apV.classList.remove('cur'); } apV=null; apUi(); if(was) scheduleGuide();
 }
 async function apStep(dir){
@@ -1245,13 +1257,23 @@ async function apStep(dir){
     if (t && apOn) apPlayVerse(t);
   } finally { apBusy=false; }
 }
-apAudio.addEventListener('ended',()=>{
-  if (!apOn||!apV) return;
-  if (apQueue.length){ apAudio.src=apQueue.shift(); apAudio.play().catch(apFail); return; }
-  if (apLeft>1){ apLeft--; apAudio.src=apUrl(+apV.dataset.s,+apV.dataset.a); apAudio.play().catch(apFail); return; }
+function apNextPlay(src){ // شغّل الرابط التالي على العنصر الجاهز مسبقًا (أقل فجوة، يعمل والشاشة مقفلة)
+  const sp=apSpare(), old=apAudio;
+  if (sp.getAttribute('src')===src){ apAudio=sp; } else { apAudio.src=src; }
+  const p=apAudio.play(); if(p&&p.catch) p.catch(apFail);
+  if (apAudio!==old){ try{ old.pause(); }catch(e){} }
+  apPlaying=true; apUi(); setTimeout(apPreload,300);
+}
+function apEnded(el){
+  if (!apOn||!apV||el!==apAudio) return;
+  if (apQueue.length){ apNextPlay(apQueue.shift()); return; }
+  if (apLeft>1){ apLeft--; apNextPlay(apUrl(+apV.dataset.s,+apV.dataset.a)); return; }
+  const n=apNextVerse();
+  if (n){ apV.classList.remove('cur'); apV=n; apQueue=apList(n); apLeft=apRepN; apMark(n); apMeta(n); apNextPlay(apQueue.shift()); return; }
   apStep(1);
-});
-apAudio.addEventListener('error',()=>{ if(apOn && apAudio.getAttribute('src')) apFail(); });
+}
+apA1.addEventListener('ended',()=>apEnded(apA1)); apA2.addEventListener('ended',()=>apEnded(apA2));
+[apA1,apA2].forEach(e=>e.addEventListener('error',()=>{ if(apOn && e===apAudio && e.getAttribute('src') && e.getAttribute('src')!==AP_SIL) apFail(); }));
 function apToggle(){
   if (!apOn){ const v=curVerse(); if(v) apPlayVerse(v); return; }
   if (apPlaying){ apAudio.pause(); apPlaying=false; } else { apAudio.play().catch(apFail); apPlaying=true; }
