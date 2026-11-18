@@ -502,7 +502,7 @@ function versesAtLine(y){
     const t=Math.min(1,Math.max(0,(y-sTop)/lh)), x=R-t*(R-L); let bs=1e9;
     for (const [v,q] of frags){ const d=x<q.left?q.left-x:x>q.right?x-q.right:0; if(d<bs){bs=d;best=v;} }
   }
-  if (!best&&all.length){ if(scrollY<4) best=all[0]; }
+  if (all.length&&scrollY<4) best=all[0]; // أعلى الصفحة: الآية الأولى
   if (all.length&&scrollY+innerHeight>=document.documentElement.scrollHeight-4&&y<all[all.length-1].getBoundingClientRect().top) best=all[all.length-1];
   return best?[best]:[];
 }
@@ -681,7 +681,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٢ · ٢٠٢٦/١١/١٨ · موقع';
+$('verNote').textContent='الإصدار ٢٫٣ · ٢٠٢٦/١١/١٨ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
