@@ -710,7 +710,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫١٣ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫١٤ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1182,7 +1182,7 @@ function qStart(){
 }
 $('qmic').addEventListener('click',()=>{ closeSheet(); if(voiceOn) return; vStart(); });
 // ===== مشغّل صوت القارئ (آية بآية من EveryAyah) =====
-const REC={afasy:['العفاسي','Alafasy_128kbps'],bm:['عبدالباسط · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط · مجوّد','Abdul_Basit_Mujawwad_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],hs:['الحصري','Husary_128kbps'],sd:['السديس','Abdurrahmaan_As-Sudais_192kbps']};
+const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],bm:['عبدالباسط · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط · مجوّد','Abdul_Basit_Mujawwad_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],hs:['محمود الحصري','Husary_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps']};
 let apRec=store.get('apRec','afasy'); if(!REC[apRec]) apRec='afasy';
 let apRepN=store.get('apRep',1); if(![1,2,3,5].includes(apRepN)) apRepN=1;
 let apOn=false, apPlaying=false, apV=null, apLeft=1, apQueue=[], apBusy=false, apPf=null;
