@@ -763,7 +763,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٢٠ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٢١ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -958,7 +958,7 @@ function vNormD(s){ s=s.replace(/[٠-٩]/g,c=>String.fromCharCode(c.charCodeAt(0
 function vSurahByName(txt){
   const c=x=>vNorm(x).replace(/^ال/,'').replace(/ /g,'').replace(/^(ال)/,'');
   const t=c(txt); if(!t) return 0;
-  const AL={ياسين:36,صاد:38,قاف:50,نون:68,براه:9,تبارك:67,عم:78,بنياسرائيل:17,حمالسجده:41,حمسجده:41,مومن:40};
+  const AL0={ياسين:36,صاد:38,قاف:50,نون:68,براءة:9,تبارك:67,عم:78,'بني اسرائيل':17,'بني اسرايل':17,'بني اسراييل':17,'حم السجدة':41,'حم سجدة':41,'مؤمن':40}, AL={}; for (const k in AL0) AL[c(k)]=AL0[k];
   if (AL[t]) return AL[t];
   for (let n=1;n<=114;n++){ const nm=c(names[n]); if (nm===t || (t.length>=4&&wEq(t,nm))) return n; }
   return 0;
@@ -1432,6 +1432,8 @@ addEventListener('pagehide',()=>{ if(voiceOn) vStop('تم الإيقاف'); });
 addEventListener('beforeunload',()=>{ if(voiceOn) vStop('تم الإيقاف'); });
 let vHidT=0;
 document.addEventListener('visibilitychange',()=>{ clearTimeout(vHidT); if(document.hidden && voiceOn) vHidT=setTimeout(()=>{ if(document.hidden && voiceOn) vStop('تم الإيقاف'); },10000); });
+// الرجوع من تطبيق آخر: أعد تشغيل المايك من جديد (الآيفون يعلّق الجلسة القديمة)
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && voiceOn){ clearTimeout(vRestart); clearTimeout(vWatch); try{ if(vRec){ vRec.onend=null; vRec.abort(); } }catch(e){} vErrN=0; $('micTxt').textContent='إعادة تشغيل الميكروفون…'; vRestart=setTimeout(vRun,500); } });
 $('micBtn').addEventListener('click',()=>{ if(voiceOn) vStop(); else vStart(); });
 (function(){
   const fab=$('fab'), bar=document.querySelector('.bar');
