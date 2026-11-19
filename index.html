@@ -158,6 +158,12 @@ body.vo #fab2,body.vo #apPanel{display:none}
 #apPanel .ap-row{display:flex;gap:.5rem;align-items:center}
 #apPanel select{flex:1;max-width:none;font-size:.85rem;padding:.35rem .4rem}
 #apPanel .ap-name{flex:1;min-width:0;font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;height:2.2rem;padding:0 .8rem;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:start}
+#apSel{display:grid;gap:.5rem;max-height:42vh;overflow:auto}
+#apSel .apr{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+#apSel .aprep{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem}
+#apSel button{font:inherit;font-size:.85rem;min-height:2.2rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:.2rem .3rem;cursor:pointer}
+#apSel button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+#apSel #apDone{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 body.ao #play,body.ao .speed{display:none}
 body.ao .apc{display:flex}
 .apc{display:none;flex:1;justify-content:center;align-items:center;gap:.8rem;direction:ltr}
@@ -197,7 +203,8 @@ body.vo #fab{background:#d33!important;border-color:#d33!important}
   <div id="micBar" hidden><i class="dot"></i><span id="micTxt" class="t"></span><button id="micStop" type="button">إيقاف</button></div>
   <div id="apPanel" hidden>
     <div class="ap-row"><button class="ap-name" id="apName" type="button"></button><button class="ap-x" id="apX" type="button" aria-label="إغلاق">✕</button></div>
-    <div class="ap-row" id="apSel" hidden><select id="apRec" aria-label="القارئ"></select><select id="apRepSel" aria-label="تكرار الآية"><option value="1">بلا تكرار</option><option value="2">مرتين</option><option value="3">٣ مرات</option><option value="5">٥ مرات</option></select></div>
+    <div id="apSel" hidden><div class="apr" id="apRecL"></div><div class="aprep" id="apRepL"></div><button id="apDone" type="button">تم</button></div>
+    <div hidden><select id="apRec" aria-label="القارئ"></select><select id="apRepSel" aria-label="تكرار الآية"><option value="1">بلا تكرار</option><option value="2">مرتين</option><option value="3">٣ مرات</option><option value="5">٥ مرات</option></select></div>
     <p class="ap-note">الصوت من EveryAyah.com · يحتاج إنترنت</p>
   </div>
   <div id="fsPanel" dir="ltr" hidden><span class="s1" style="font-family:var(--font-ui);font-weight:700;font-size:.85rem">A</span><input type="range" id="fsR" min="1.3" max="3.6" step="0.1" aria-label="حجم الخط" style="flex:1"><span class="s2" style="font-family:var(--font-ui);font-weight:700;font-size:1.5rem">A</span></div>
@@ -710,7 +717,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫١٤ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫١٥ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1204,8 +1211,12 @@ $('apRec').value=apRec; $('apRepSel').value=String(apRepN);
 function apNm(){ $('apName').textContent='🎙 '+REC[apRec][0]+(apRepN>1?' · تكرار '+ar(apRepN):'')+' ▾'; }
 function apBody(){ document.body.classList.toggle('ao',apOn||!apPanel.hidden); }
 apNm();
-function apSelShow(b){ $('apSel').hidden=!b; $('apName').hidden=b; }
-$('apName').addEventListener('click',()=>apSelShow(true));
+function apOpt(){ document.querySelectorAll('#apRecL button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===apRec))); document.querySelectorAll('#apRepL button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===apRepN))); }
+function apSelShow(b){ $('apSel').hidden=!b; if(b) apOpt(); }
+for (const k in REC){ const b=document.createElement('button'); b.type='button'; b.dataset.v=k; b.textContent=REC[k][0]; b.addEventListener('click',()=>{ $('apRec').value=k; $('apRec').dispatchEvent(new Event('change')); }); $('apRecL').appendChild(b); }
+[[1,'بلا تكرار'],[2,'مرتين'],[3,'٣ مرات'],[5,'٥ مرات']].forEach(([v,t])=>{ const b=document.createElement('button'); b.type='button'; b.dataset.v=v; b.textContent=t; b.addEventListener('click',()=>{ $('apRepSel').value=String(v); $('apRepSel').dispatchEvent(new Event('change')); }); $('apRepL').appendChild(b); });
+$('apName').addEventListener('click',()=>apSelShow($('apSel').hidden));
+$('apDone').addEventListener('click',()=>apSelShow(false));
 const apPad=(n,l)=>String(n).padStart(l,'0');
 function apUrl(s,a,rec){ return 'https://everyayah.com/data/'+REC[rec||apRec][1]+'/'+apPad(s,3)+apPad(a,3)+'.mp3'; }
 function apList(v){ const s=+v.dataset.s, a=+v.dataset.a, l=[]; if(a===1&&s!==1&&s!==9) l.push(apUrl(1,1)); l.push(apUrl(s,a)); return l; }
@@ -1282,8 +1293,8 @@ function apToggle(){
 $('apPlay').addEventListener('click',apToggle);
 $('apNextB').addEventListener('click',()=>{ if(!apOn){ const v=curVerse(); if(v) apPlayVerse(v); } else apStep(1); });
 $('apPrev').addEventListener('click',()=>{ if(!apOn){ const v=curVerse(); if(v) apPlayVerse(v); } else apStep(-1); });
-$('apRec').addEventListener('change',()=>{ apRec=$('apRec').value; store.set('apRec',apRec); store.set('apChosen',true); apNm(); apSelShow(false); if(apOn&&apV) apPlayVerse(apV); });
-$('apRepSel').addEventListener('change',()=>{ apRepN=+$('apRepSel').value; store.set('apRep',apRepN); apLeft=apRepN; apNm(); apSelShow(false); });
+$('apRec').addEventListener('change',()=>{ apRec=$('apRec').value; store.set('apRec',apRec); store.set('apChosen',true); apNm(); apOpt(); if(apOn&&apV) apPlayVerse(apV); });
+$('apRepSel').addEventListener('change',()=>{ apRepN=+$('apRepSel').value; store.set('apRep',apRepN); apLeft=apRepN; apNm(); apOpt(); });
 $('apX').addEventListener('click',()=>{ apStop(); apHide(); });
 fab2.addEventListener('click',()=>{ const o=apPanel.hidden; setPanel.hidden=true; goPanel.hidden=true; fsPanel.hidden=true; apPanel.hidden=!o; if(o) apSelShow(!store.get('apChosen',false)); apBody(); });
 (function(){ const bar=document.querySelector('.bar'); const pos=()=>{ fab2.style.bottom=(bar.offsetHeight+14+56)+'px'; }; pos(); addEventListener('resize',pos); if(window.ResizeObserver) new ResizeObserver(pos).observe(bar); })();
