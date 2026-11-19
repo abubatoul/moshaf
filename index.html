@@ -763,7 +763,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٢٤ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٢٥ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1435,7 +1435,11 @@ addEventListener('beforeunload',()=>{ if(voiceOn) vStop('تم الإيقاف'); 
 let vHidT=0;
 document.addEventListener('visibilitychange',()=>{ clearTimeout(vHidT); if(document.hidden && voiceOn) vStop('تم الإيقاف. اضغط 🎤 للتشغيل'); });
 // الآيفون يخرّب محرك التعرف على الصوت بعد الخروج من التطبيق: أعد تحميل الصفحة عند الرجوع (المكان محفوظ)
-document.addEventListener('visibilitychange',()=>{ if(document.hidden){ vHideAt=Date.now(); try{ savePlace(); }catch(e){} } else if(vUsed && vHideAt && Date.now()-vHideAt>1500){ vHideAt=0; location.reload(); } });
+document.addEventListener('visibilitychange',()=>{ if(document.hidden){ vHideAt=Date.now(); try{ savePlace(); }catch(e){} } else if(vUsed){ vHideAt=0; try{ savePlace(); }catch(e){} location.reload(); } });
+// الآيفون يجمّد الصفحة بدون إرسال حدث الإخفاء أحيانًا: اكتشف التجميد من توقف المؤقّت
+let vBeat=Date.now();
+setInterval(()=>{ const n=Date.now(); if(vUsed && n-vBeat>4000){ try{ savePlace(); }catch(e){} location.reload(); return; } vBeat=n; },1000);
+addEventListener('pageshow',e=>{ if(e.persisted && vUsed) location.reload(); });
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden && voiceOn){ clearTimeout(vRestart); clearTimeout(vWatch); try{ if(vRec){ vRec.onend=null; vRec.abort(); } }catch(e){} vErrN=0; $('micTxt').textContent='إعادة تشغيل الميكروفون…'; vRestart=setTimeout(vRun,500); const t0=Date.now(); setTimeout(()=>{ if(voiceOn && vLastStart<t0) vStop('اضغط 🎤 للتشغيل من جديد'); },3500); } });
 $('micBtn').addEventListener('click',()=>{ if(voiceOn) vStop(); else vStart(); });
 (function(){
