@@ -763,7 +763,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٢٢ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٢٣ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1431,7 +1431,7 @@ hdrArm();
 addEventListener('pagehide',()=>{ if(voiceOn) vStop('تم الإيقاف'); });
 addEventListener('beforeunload',()=>{ if(voiceOn) vStop('تم الإيقاف'); });
 let vHidT=0;
-document.addEventListener('visibilitychange',()=>{ clearTimeout(vHidT); if(document.hidden && voiceOn) vHidT=setTimeout(()=>{ if(document.hidden && voiceOn) vStop('تم الإيقاف'); },10000); });
+document.addEventListener('visibilitychange',()=>{ clearTimeout(vHidT); if(document.hidden && voiceOn) vStop('تم الإيقاف. اضغط 🎤 للتشغيل'); });
 // الرجوع من تطبيق آخر: أعد تشغيل المايك من جديد (الآيفون يعلّق الجلسة القديمة)
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden && voiceOn){ clearTimeout(vRestart); clearTimeout(vWatch); try{ if(vRec){ vRec.onend=null; vRec.abort(); } }catch(e){} vErrN=0; $('micTxt').textContent='إعادة تشغيل الميكروفون…'; vRestart=setTimeout(vRun,500); const t0=Date.now(); setTimeout(()=>{ if(voiceOn && vLastStart<t0) vStop('اضغط 🎤 للتشغيل من جديد'); },3500); } });
 $('micBtn').addEventListener('click',()=>{ if(voiceOn) vStop(); else vStart(); });
