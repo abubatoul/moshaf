@@ -763,7 +763,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٢١ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٢٢ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1071,12 +1071,12 @@ function vStart(){
   setPanel.hidden=true;
   vRun();
 }
-let vErrN=0, vWatch=0;
+let vErrN=0, vWatch=0, vLastStart=0;
 function vRun(){
   if (!voiceOn) return;
   clearTimeout(vWatch);
   const r=new SR(); vRec=r; r.lang='ar-SA'; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
-  r.onstart=()=>{ clearTimeout(vWatch); vErrN=0; vCmdPos=0; vBase=0; vFullLen=0; vRawLen=0; vSeen=new Set(); vPrevBuf=vPrevBuf.concat(vCurHeard).slice(-60); vCurHeard=[]; if(vFirst||/^(جار|إعادة)/.test($('micTxt').textContent)) $('micTxt').textContent='ابدأ القراءة، أو قل: سورة …'; vFirst=false; };
+  r.onstart=()=>{ clearTimeout(vWatch); vLastStart=Date.now(); vErrN=0; vCmdPos=0; vBase=0; vFullLen=0; vRawLen=0; vSeen=new Set(); vPrevBuf=vPrevBuf.concat(vCurHeard).slice(-60); vCurHeard=[]; if(vFirst||/^(جار|إعادة)/.test($('micTxt').textContent)) $('micTxt').textContent='ابدأ القراءة، أو قل: سورة …'; vFirst=false; };
   r.onspeechstart=()=>{ vIdleArm(); if(/^(ابدأ|إعادة)/.test($('micTxt').textContent)) $('micTxt').textContent='جارٍ الاستماع…'; };
   r.onresult=e=>{ vErrN=0; vHandle(e); };
   r.onnomatch=()=>{ $('micTxt').textContent='أعد القراءة'; };
@@ -1433,7 +1433,7 @@ addEventListener('beforeunload',()=>{ if(voiceOn) vStop('تم الإيقاف'); 
 let vHidT=0;
 document.addEventListener('visibilitychange',()=>{ clearTimeout(vHidT); if(document.hidden && voiceOn) vHidT=setTimeout(()=>{ if(document.hidden && voiceOn) vStop('تم الإيقاف'); },10000); });
 // الرجوع من تطبيق آخر: أعد تشغيل المايك من جديد (الآيفون يعلّق الجلسة القديمة)
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden && voiceOn){ clearTimeout(vRestart); clearTimeout(vWatch); try{ if(vRec){ vRec.onend=null; vRec.abort(); } }catch(e){} vErrN=0; $('micTxt').textContent='إعادة تشغيل الميكروفون…'; vRestart=setTimeout(vRun,500); } });
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden && voiceOn){ clearTimeout(vRestart); clearTimeout(vWatch); try{ if(vRec){ vRec.onend=null; vRec.abort(); } }catch(e){} vErrN=0; $('micTxt').textContent='إعادة تشغيل الميكروفون…'; vRestart=setTimeout(vRun,500); const t0=Date.now(); setTimeout(()=>{ if(voiceOn && vLastStart<t0) vStop('اضغط 🎤 للتشغيل من جديد'); },3500); } });
 $('micBtn').addEventListener('click',()=>{ if(voiceOn) vStop(); else vStart(); });
 (function(){
   const fab=$('fab'), bar=document.querySelector('.bar');
