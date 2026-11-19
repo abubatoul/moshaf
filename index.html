@@ -107,6 +107,12 @@ header .hb{flex:none;font:inherit;font-size:.85rem;border:1px solid var(--line);
 #backChip .x{padding:.5rem .8rem;opacity:.8;border-inline-start:1px solid rgba(255,255,255,.3)}
 #vpop{position:fixed;z-index:10;inset-inline:12px;bottom:12rem;max-width:34rem;margin:0 auto;display:flex;align-items:center;gap:.6rem;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.25);padding:.55rem .7rem}
 #vpop[hidden]{display:none}
+#shSheet{position:fixed;inset:0;z-index:31;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+#shSheet .card{background:var(--surface);color:var(--fg);border-radius:16px;max-width:24rem;width:100%;padding:1.1rem 1.2rem;box-shadow:0 10px 40px rgba(0,0,0,.4);display:grid;gap:.55rem}
+#shSheet h3{margin:0;font-size:1.05rem;color:var(--accent)}
+#shTxt{margin:0;font-family:var(--font-quran);font-size:1.15rem;line-height:2;max-height:7.5rem;overflow:auto;color:var(--fg);text-align:center}
+#shSheet button{font:inherit;height:2.6rem;border-radius:10px;border:0;background:var(--accent);color:var(--accent-fg);cursor:pointer}
+#shSheet button.g{background:none;color:var(--fg);border:1px solid var(--line)}
 #vpop span{flex:1;font-size:.85rem;color:var(--muted)}
 #vpop button{font:inherit;font-size:.85rem;border-radius:8px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-fg);padding:.45rem .8rem;cursor:pointer}
 #vpop button.g{background:none;color:var(--fg);border-color:var(--line)}
@@ -158,11 +164,15 @@ body.vo #fab2,body.vo #apPanel{display:none}
 #apPanel .ap-row{display:flex;gap:.5rem;align-items:center}
 #apPanel select{flex:1;max-width:none;font-size:.85rem;padding:.35rem .4rem}
 #apPanel .ap-name{flex:1;min-width:0;font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;height:2.2rem;padding:0 .8rem;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:start}
-#apSel{display:grid;gap:.5rem;max-height:42vh;overflow:auto}
+#apSel{display:grid;gap:.5rem;max-height:56vh;overflow:auto}
 #apSel .apr{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
 #apSel .aprep{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem}
 #apSel button{font:inherit;font-size:.85rem;min-height:2.2rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:.2rem .3rem;cursor:pointer}
 #apSel button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+#apSel .dlrow{display:flex;gap:.4rem}
+#apSel .dlrow select{flex:1;max-width:none;font-size:.85rem;padding:.35rem .4rem}
+#apSel .dlrow button{flex:none;min-width:5.5rem}
+#apSel #dlSt{margin:.3rem 0 0;font-size:.78rem;color:var(--muted);text-align:center}
 #apSel #apDone{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 body.ao #play,body.ao .speed{display:none}
 body.ao .apc{display:flex}
@@ -203,9 +213,9 @@ body.vo #fab{background:#d33!important;border-color:#d33!important}
   <div id="micBar" hidden><i class="dot"></i><span id="micTxt" class="t"></span><button id="micStop" type="button">إيقاف</button></div>
   <div id="apPanel" hidden>
     <div class="ap-row"><button class="ap-name" id="apName" type="button"></button><button class="ap-x" id="apX" type="button" aria-label="إغلاق">✕</button></div>
-    <div id="apSel" hidden><div class="apr" id="apRecL"></div><div class="aprep" id="apRepL"></div><button id="apDone" type="button">تم</button></div>
+    <div id="apSel" hidden><div class="apr" id="apRecL"></div><div class="aprep" id="apRepL"></div><div class="apdl"><div class="dlrow"><select id="dlS" aria-label="السورة"></select><button id="dlGo" type="button">⬇ تحميل</button></div><p id="dlSt"></p></div><button id="apDone" type="button">تم</button></div>
     <div hidden><select id="apRec" aria-label="القارئ"></select><select id="apRepSel" aria-label="تكرار الآية"><option value="1">بلا تكرار</option><option value="2">مرتين</option><option value="3">٣ مرات</option><option value="5">٥ مرات</option></select></div>
-    <p class="ap-note">الصوت من EveryAyah.com · يحتاج إنترنت</p>
+    <p class="ap-note">الصوت من EveryAyah.com · يحتاج إنترنت إلا للسور المحمّلة</p>
   </div>
   <div id="fsPanel" dir="ltr" hidden><span class="s1" style="font-family:var(--font-ui);font-weight:700;font-size:.85rem">A</span><input type="range" id="fsR" min="1.3" max="3.6" step="0.1" aria-label="حجم الخط" style="flex:1"><span class="s2" style="font-family:var(--font-ui);font-weight:700;font-size:1.5rem">A</span></div>
   <div id="setPanel" class="set" hidden>
@@ -234,7 +244,7 @@ body.vo #fab{background:#d33!important;border-color:#d33!important}
     <button id="fab2" type="button" aria-label="استماع للقارئ">🎧</button>
     <button id="play" aria-label="تشغيل التمرير التلقائي">▶</button>
     <div class="speed">
-      <div class="lab"><span>بطيء</span><span id="spv"></span><span>سريع</span></div>
+      <div class="lab"><span>سريع</span><span id="spv"></span><span>بطيء</span></div>
       <input type="range" id="speed" min="5" max="120" step="1" value="30" aria-label="سرعة التمرير" dir="ltr">
     </div>
     <div class="apc"><button id="apPrev" type="button" aria-label="الآية السابقة">⏮</button><button id="apPlay" type="button" aria-label="تشغيل">▶</button><button id="apNextB" type="button" aria-label="الآية التالية">⏭</button></div>
@@ -261,7 +271,8 @@ body.vo #fab{background:#d33!important;border-color:#d33!important}
 
 <div id="instSheet" hidden><div class="card" role="dialog" aria-label="التثبيت على الشاشة الرئيسية"><h3 id="instTitle"></h3><ol id="instSteps"></ol><div id="instArrow" class="ar" hidden>⬇</div><button id="instOk" type="button">حسنًا</button></div></div>
 <div id="backChip" hidden><div class="in"><button id="backGo" type="button"></button><button id="backX" class="x" type="button" aria-label="إخفاء">✕</button></div></div>
-<div id="vpop" hidden><span id="vpLab"></span><button id="vpBm" type="button"></button><button id="vpX" class="g" type="button">إغلاق</button></div>
+<div id="vpop" hidden><span id="vpLab"></span><button id="vpBm" type="button"></button><button id="vpSh" class="g" type="button">مشاركة</button><button id="vpX" class="g" type="button">إغلاق</button></div>
+<div id="shSheet" hidden><div class="card" role="dialog" aria-label="مشاركة الآية"><h3 id="shTitle"></h3><p id="shTxt"></p><button id="shCopy" type="button">📋 نسخ النص</button><button id="shText" type="button">📤 مشاركة النص</button><button id="shImg" type="button">🖼 مشاركة كصورة</button><button id="shX" class="g" type="button">إغلاق</button></div></div>
 <div id="bmSheet" hidden role="dialog" aria-label="العلامات المحفوظة">
   <div class="sh-top">
     <button id="bmAdd" type="button" style="flex:1">＋ علامة عند خط القراءة</button>
@@ -699,6 +710,41 @@ $('text').addEventListener('click',e=>{
 });
 $('vpBm').addEventListener('click',()=>{ if(!vpV) return; const on=toggleBm(vpV); $('vpBm').textContent=on?'إزالة العلامة':'★ إضافة علامة'; setTimeout(hideVp,700); });
 $('vpX').addEventListener('click',hideVp);
+// ---- مشاركة الآية: نص أو صورة ----
+let shV=null;
+function shData(){ const s=+shV.dataset.s, a=+shV.dataset.a; const t=vTxt(shV).replace(/[\u06d6-\u06dc\u06e9\u06de]/g,'').replace(/\s+/g,' ').trim(); return {s,a,t,ref:'سورة '+names[s]+' · آية '+ar(a)}; }
+function shOpen(){ if(!vpV) return; shV=vpV; hideVp(); const d=shData(); $('shTitle').textContent=d.ref; $('shTxt').textContent=d.t; $('shSheet').hidden=false; }
+function shClose(){ $('shSheet').hidden=true; shV=null; }
+function shMsg(d){ return d.t+' ﴿'+ar(d.a)+'﴾\n['+d.ref+']\nالقرآن الكريم · abubatoul.github.io/moshaf'; }
+async function shCopy(){ const d=shData(); try{ await navigator.clipboard.writeText(shMsg(d)); toast('تم نسخ الآية'); }catch(e){ toast('تعذر النسخ'); } shClose(); }
+async function shText(){ const d=shData(); try{ if(navigator.share) await navigator.share({text:shMsg(d)}); else { await navigator.clipboard.writeText(shMsg(d)); toast('تم نسخ الآية'); } }catch(e){} shClose(); }
+function shWrap(ctx,text,w){ const ws=text.split(' '), lines=[]; let cur=''; for (const x of ws){ const t=cur?cur+' '+x:x; if (ctx.measureText(t).width>w && cur){ lines.push(cur); cur=x; } else cur=t; } if(cur) lines.push(cur); return lines; }
+async function shImage(){
+  const d=shData(); shClose(); toast('جارٍ تجهيز الصورة…');
+  try{ await Promise.race([document.fonts.load('48px "Amiri Quran"'),new Promise(r=>setTimeout(r,2000))]); }catch(e){}
+  const W=1080,H=1350, c=document.createElement('canvas'); c.width=W; c.height=H; const x=c.getContext('2d');
+  const g=x.createLinearGradient(0,0,W,H); g.addColorStop(0,'#123628'); g.addColorStop(1,'#1d6a50'); x.fillStyle=g; x.fillRect(0,0,W,H);
+  x.strokeStyle='#d4b45a'; x.lineWidth=3; x.strokeRect(50,50,W-100,H-100); x.lineWidth=1; x.strokeRect(64,64,W-128,H-128);
+  x.direction='rtl'; x.textAlign='center'; x.textBaseline='alphabetic';
+  const FF='"Amiri Quran","Scheherazade New","Traditional Arabic",serif', txt=d.t+' ﴿'+ar(d.a)+'﴾', maxW=W-240, maxH=H-520;
+  let size=84, lines;
+  for (; size>=34; size-=4){ x.font=size+'px '+FF; lines=shWrap(x,txt,maxW); if (lines.length*size*1.95<=maxH) break; }
+  const lh=size*1.95, total=lines.length*lh; let y=(H-total)/2+size*0.45-30;
+  x.fillStyle='#ffffff'; lines.forEach((l,i)=>x.fillText(l,W/2,y+i*lh));
+  x.fillStyle='#d4b45a'; x.font='44px '+FF; x.fillText(d.ref,W/2,H-190);
+  x.fillStyle='rgba(255,255,255,.7)'; x.font='30px "IBM Plex Sans Arabic",sans-serif'; x.fillText('القرآن الكريم',W/2,H-130);
+  c.toBlob(async b=>{
+    if(!b){ toast('تعذر تجهيز الصورة'); return; }
+    const file=new File([b],'ayah.png',{type:'image/png'});
+    try{
+      if (navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file]}); return; }
+    }catch(e){ if (e && e.name==='AbortError') return; }
+    const u=URL.createObjectURL(b), a=document.createElement('a'); a.href=u; a.download='ayah.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); toast('تم حفظ الصورة');
+  },'image/png');
+}
+$('vpSh').addEventListener('click',shOpen); $('shX').addEventListener('click',shClose);
+$('shCopy').addEventListener('click',shCopy); $('shText').addEventListener('click',shText); $('shImg').addEventListener('click',shImage);
+$('shSheet').addEventListener('click',e=>{ if(e.target===$('shSheet')) shClose(); });
 addEventListener('scroll',()=>{ if(!$('vpop').hidden) hideVp(); },{passive:true});
 
 // ---- التثبيت والتحميل للاستخدام بدون إنترنت ----
@@ -717,7 +763,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫١٦ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫١٩ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1212,13 +1258,74 @@ function apNm(){ $('apName').textContent='🎙 '+REC[apRec][0]+(apRepN>1?' · ت
 function apBody(){ document.body.classList.toggle('ao',apOn||!apPanel.hidden); }
 apNm();
 function apOpt(){ document.querySelectorAll('#apRecL button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===apRec))); document.querySelectorAll('#apRepL button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===apRepN))); }
-function apSelShow(b){ $('apSel').hidden=!b; if(b) apOpt(); }
+for (let q=1;q<=114;q++){ const o=document.createElement('option'); o.value=q; o.textContent=ar(q)+'. '+names[q]; $('dlS').appendChild(o); }
+$('dlS').addEventListener('change',dlUi);
+$('dlGo').addEventListener('click',()=>{ if(dlRun){ dlRun.stop=true; return; } if(dlDone.has(apRec+'|'+dlSel())) dlDelete(); else dlStart(); });
+function apSelShow(b){ $('apSel').hidden=!b; if(b){ apOpt(); try{ const v=curVerse(); if(v && !dlRun) $('dlS').value=v.dataset.s; }catch(e){} dlUi(); } }
 for (const k in REC){ const b=document.createElement('button'); b.type='button'; b.dataset.v=k; b.textContent=REC[k][0]; b.addEventListener('click',()=>{ $('apRec').value=k; $('apRec').dispatchEvent(new Event('change')); }); $('apRecL').appendChild(b); }
 [[1,'بلا تكرار'],[2,'مرتين'],[3,'٣ مرات'],[5,'٥ مرات']].forEach(([v,t])=>{ const b=document.createElement('button'); b.type='button'; b.dataset.v=v; b.textContent=t; b.addEventListener('click',()=>{ $('apRepSel').value=String(v); $('apRepSel').dispatchEvent(new Event('change')); }); $('apRepL').appendChild(b); });
 $('apName').addEventListener('click',()=>apSelShow($('apSel').hidden));
 $('apDone').addEventListener('click',()=>apSelShow(false));
 const apPad=(n,l)=>String(n).padStart(l,'0');
-function apUrl(s,a,rec){ return 'https://everyayah.com/data/'+REC[rec||apRec][1]+'/'+apPad(s,3)+apPad(a,3)+'.mp3'; }
+const apBlobs=new Map();
+const apKey=(rec,s,a)=>rec+'|'+apPad(s,3)+'|'+apPad(a,3);
+function apNet(s,a,rec){ return 'https://everyayah.com/data/'+REC[rec||apRec][1]+'/'+apPad(s,3)+apPad(a,3)+'.mp3'; }
+function apUrl(s,a,rec){ return apBlobs.get(apKey(rec||apRec,s,a))||apNet(s,a,rec); }
+// ===== تحميل الصوت للاستخدام بدون إنترنت (يُحفظ على الجهاز) =====
+let dbP=null;
+function dbOpen(){ return dbP||(dbP=new Promise((res,rej)=>{ const r=indexedDB.open('mqaudio',1); r.onupgradeneeded=()=>{ r.result.createObjectStore('a'); r.result.createObjectStore('m'); }; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); })); }
+function dbReq(st,mode,fn){ return dbOpen().then(db=>new Promise((res,rej)=>{ const t=db.transaction(st,mode); const rq=fn(t.objectStore(st)); t.oncomplete=()=>res(rq&&rq.result); t.onerror=()=>rej(t.error); t.onabort=()=>rej(t.error); })); }
+const dlRange=(rec,s)=>IDBKeyRange.bound(rec+'|'+apPad(s,3)+'|',rec+'|'+apPad(s,3)+'|\uffff');
+let dlDone=new Map(), dlRun=null, dlWarmed=new Set();
+dbReq('m','readonly',o=>o.getAll()).then(a=>{ return dbReq('m','readonly',o=>o.getAllKeys()).then(k=>{ k.forEach((x,i)=>dlDone.set(x,a[i])); dlUi(); }); }).catch(()=>{});
+async function apWarm(s){
+  const rec=apRec, k=rec+'|'+s; if(!dlDone.has(k)||dlWarmed.has(k)) return; dlWarmed.add(k);
+  try{
+    const ks=await dbReq('a','readonly',o=>o.getAllKeys(dlRange(rec,s))), bs=await dbReq('a','readonly',o=>o.getAll(dlRange(rec,s)));
+    ks.forEach((x,i)=>{ if(!apBlobs.has(x)) apBlobs.set(x,URL.createObjectURL(bs[i])); });
+    const bk=apKey(rec,1,1); if(!apBlobs.has(bk)){ const b=await dbReq('a','readonly',o=>o.get(bk)); if(b) apBlobs.set(bk,URL.createObjectURL(b)); }
+    if (typeof apPreload==='function' && apOn) apPreload();
+  }catch(e){ dlWarmed.delete(k); }
+}
+function dlSel(){ return +$('dlS').value; }
+function dlUi(){
+  if(!$('dlS')) return; const s=dlSel(), k=apRec+'|'+s, st=$('dlSt'), b=$('dlGo');
+  if (dlRun && dlRun.k===k){ b.textContent='إيقاف'; return; }
+  if (dlRun){ b.textContent='⬇ تحميل'; b.disabled=true; return; } b.disabled=false;
+  if (dlDone.has(k)){ b.textContent='🗑 حذف'; st.textContent='محمّل على جهازك ✓ ('+ar(Math.max(1,Math.round((dlDone.get(k).bytes||0)/1048576)))+' ميجا)'; }
+  else { b.textContent='⬇ تحميل'; st.textContent='غير محمّل · القارئ: '+REC[apRec][0]; }
+}
+async function dlStart(){
+  const rec=apRec, s=dlSel(), k=rec+'|'+s, n=counts[s]; const todo=[];
+  for (let a=1;a<=n;a++) todo.push(a);
+  const run={k,stop:false}; dlRun=run; dlUi();
+  let done=0, fail=0, bytes=0, first=true;
+  const st=$('dlSt'); st.textContent='جارٍ التحميل… ٠ / '+ar(n);
+  const get=async(sv,av)=>{
+    const key=apKey(rec,sv,av); let have=null; try{ have=await dbReq('a','readonly',o=>o.get(key)); }catch(e){}
+    if (have) return have.size;
+    let lastE=null;
+    for (let t=0;t<2;t++){ try{ const r=await fetch(apNet(sv,av,rec),{mode:'cors'}); if(!r.ok) throw new Error('http '+r.status); const b=await r.blob(); if(!b.size) throw new Error('empty'); await dbReq('a','readwrite',o=>o.put(b,key)); return b.size; }catch(e){ lastE=e; } }
+    throw lastE;
+  };
+  const worker=async()=>{ while(!run.stop && todo.length){ const a=todo.shift();
+    try{ bytes+=await get(s,a); done++; first=false; }catch(e){ fail++; if(first && fail>=3){ run.stop=true; run.err='cors'; } }
+    st.textContent='جارٍ التحميل… '+ar(done)+' / '+ar(n); } };
+  await Promise.all([worker(),worker(),worker()]);
+  if (s!==1&&s!==9&&!run.stop){ try{ bytes+=await get(1,1); }catch(e){ fail++; } }
+  dlRun=null;
+  if (run.stop && run.err==='cors'){ st.textContent='تعذر التحميل. تحقق من الإنترنت، أو إن الموقع ما يسمح بالتحميل هنا.'; }
+  else if (run.stop){ st.textContent='تم الإيقاف. المحمّل جزئيًا يبقى محفوظًا.'; }
+  else if (fail){ st.textContent='نقصت '+ar(fail)+' آية. اضغط تحميل لإكمالها.'; }
+  else { const m={bytes,n,t:Date.now()}; await dbReq('m','readwrite',o=>o.put(m,k)).catch(()=>{}); dlDone.set(k,m); dlWarmed.delete(k); if(apOn&&apRec===rec) apWarm(s); toast('تم تحميل سورة '+names[s]); }
+  dlUi(); if(fail&&!run.stop) $('dlGo').textContent='⬇ إكمال التحميل';
+}
+async function dlDelete(){
+  const rec=apRec, s=dlSel(), k=rec+'|'+s;
+  try{ await dbReq('a','readwrite',o=>o.delete(dlRange(rec,s))); await dbReq('m','readwrite',o=>o.delete(k)); }catch(e){}
+  for (const key of [...apBlobs.keys()]) if (key.startsWith(rec+'|'+apPad(s,3)+'|') && key!==apKey(rec,1,1)){ try{ URL.revokeObjectURL(apBlobs.get(key)); }catch(e){} apBlobs.delete(key); }
+  dlDone.delete(k); dlWarmed.delete(k); dlUi(); toast('تم الحذف');
+}
 function apList(v){ const s=+v.dataset.s, a=+v.dataset.a, l=[]; if(a===1&&s!==1&&s!==9) l.push(apUrl(1,1)); l.push(apUrl(s,a)); return l; }
 function apHide(){ apPanel.hidden=true; apBody(); }
 function apUi(){
@@ -1245,7 +1352,7 @@ function apPrefetchOld(v){
 function apPlayVerse(v){
   if (voiceOn) vStop(); stop();
   apOn=true; apPlaying=true; apV=v; apQueue=apList(v); apLeft=apRepN;
-  apMark(v); apMeta(v);
+  apMark(v); apMeta(v); apWarm(+v.dataset.s);
   try{ apSpare().pause(); }catch(e){}
   apAudio.src=apQueue.shift(); const p=apAudio.play(); if(p&&p.catch) p.catch(apFail); apUi(); apPrime(); setTimeout(apPreload,400);
 }
@@ -1280,7 +1387,7 @@ function apEnded(el){
   if (apQueue.length){ apNextPlay(apQueue.shift()); return; }
   if (apLeft>1){ apLeft--; apNextPlay(apUrl(+apV.dataset.s,+apV.dataset.a)); return; }
   const n=apNextVerse();
-  if (n){ apV.classList.remove('cur'); apV=n; apQueue=apList(n); apLeft=apRepN; apMark(n); apMeta(n); apNextPlay(apQueue.shift()); return; }
+  if (n){ apV.classList.remove('cur'); apV=n; apWarm(+n.dataset.s); apQueue=apList(n); apLeft=apRepN; apMark(n); apMeta(n); apNextPlay(apQueue.shift()); return; }
   apStep(1);
 }
 apA1.addEventListener('ended',()=>apEnded(apA1)); apA2.addEventListener('ended',()=>apEnded(apA2));
@@ -1293,10 +1400,10 @@ function apToggle(){
 $('apPlay').addEventListener('click',apToggle);
 $('apNextB').addEventListener('click',()=>{ if(!apOn){ const v=curVerse(); if(v) apPlayVerse(v); } else apStep(1); });
 $('apPrev').addEventListener('click',()=>{ if(!apOn){ const v=curVerse(); if(v) apPlayVerse(v); } else apStep(-1); });
-$('apRec').addEventListener('change',()=>{ apRec=$('apRec').value; store.set('apRec',apRec); store.set('apChosen',true); apNm(); apOpt(); if(apOn&&apV) apPlayVerse(apV); });
+$('apRec').addEventListener('change',()=>{ apRec=$('apRec').value; store.set('apRec',apRec); store.set('apChosen',true); apNm(); apOpt(); dlUi(); { const v=apV||curVerse(); if(v) apWarm(+v.dataset.s); } if(apOn&&apV) apPlayVerse(apV); });
 $('apRepSel').addEventListener('change',()=>{ apRepN=+$('apRepSel').value; store.set('apRep',apRepN); apLeft=apRepN; apNm(); apOpt(); });
 $('apX').addEventListener('click',()=>{ apStop(); apHide(); });
-fab2.addEventListener('click',()=>{ const o=apPanel.hidden; setPanel.hidden=true; goPanel.hidden=true; fsPanel.hidden=true; apPanel.hidden=!o; if(o) apSelShow(!store.get('apChosen',false)); apBody(); });
+fab2.addEventListener('click',()=>{ try{ const v=curVerse(); if(v) apWarm(+v.dataset.s); }catch(e){} const o=apPanel.hidden; setPanel.hidden=true; goPanel.hidden=true; fsPanel.hidden=true; apPanel.hidden=!o; if(o) apSelShow(!store.get('apChosen',false)); apBody(); });
 (function(){ const bar=document.querySelector('.bar'); const pos=()=>{ fab2.style.bottom=(bar.offsetHeight+14+56)+'px'; }; pos(); addEventListener('resize',pos); if(window.ResizeObserver) new ResizeObserver(pos).observe(bar); })();
 document.addEventListener('visibilitychange',()=>{ /* الصوت يستمر مع قفل الشاشة */ });
 // ===== إخفاء الترويسة بعد ٣٠ ثانية، وتنبيه الأرقام، وإيقاف المايك عند الإغلاق =====
