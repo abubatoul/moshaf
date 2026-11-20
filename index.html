@@ -213,7 +213,7 @@ body.vo #fab{background:#d33!important;border-color:#d33!important}
   <div id="micBar" hidden><i class="dot"></i><span id="micTxt" class="t"></span><button id="micStop" type="button">إيقاف</button></div>
   <div id="apPanel" hidden>
     <div class="ap-row"><button class="ap-name" id="apName" type="button"></button><button class="ap-x" id="apX" type="button" aria-label="إغلاق">✕</button></div>
-    <div id="apSel" hidden><div class="apr" id="apRecL"></div><div class="aprep" id="apRepL"></div><div class="apdl"><div class="dlrow"><select id="dlS" aria-label="السورة"></select><button id="dlGo" type="button">⬇ تحميل</button></div><p id="dlSt"></p></div><button id="apDone" type="button">تم</button></div>
+    <div id="apSel" hidden><div class="apr" id="apRecL"></div><div class="aprep" id="apRepL"></div><div class="aprep" id="apSpL" style="grid-template-columns:repeat(5,1fr)"></div><div class="apdl"><div class="dlrow"><select id="dlS" aria-label="السورة"></select><button id="dlGo" type="button">⬇ تحميل</button></div><p id="dlSt"></p></div><button id="apDone" type="button">تم</button></div>
     <div hidden><select id="apRec" aria-label="القارئ"></select><select id="apRepSel" aria-label="تكرار الآية"><option value="1">بلا تكرار</option><option value="2">مرتين</option><option value="3">٣ مرات</option><option value="5">٥ مرات</option></select></div>
     <p class="ap-note">الصوت من EveryAyah.com · يحتاج إنترنت إلا للسور المحمّلة</p>
   </div>
@@ -763,7 +763,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٢٨ · ٢٠/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٢٩ · ٢٠/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1244,9 +1244,13 @@ $('qmic').addEventListener('click',()=>{ closeSheet(); if(voiceOn) return; vStar
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['المنشاوي','Minshawy_Murattal_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://server16.mp3quran.net/peshawa/Rewayat-Hafs-A-n-Assem/']};
 let apRec=store.get('apRec','afasy'); if(!REC[apRec]) apRec='afasy';
 let apRepN=store.get('apRep',1); if(![1,2,3,5].includes(apRepN)) apRepN=1;
+let apRate=store.get('apRate',1); if(![0.8,1,1.25,1.5,2].includes(apRate)) apRate=1;
 let apOn=false, apPlaying=false, apV=null, apLeft=1, apQueue=[], apBusy=false, apPf=null;
 const apA1=new Audio(), apA2=new Audio(); apA1.preload='auto'; apA2.preload='auto'; let apAudio=apA1;
 const apSpare=()=>apAudio===apA1?apA2:apA1;
+function apRateApply(){ [apA1,apA2].forEach(e=>{ try{ e.defaultPlaybackRate=apRate; e.playbackRate=apRate; e.preservesPitch=true; e.webkitPreservesPitch=true; }catch(_){} }); }
+apRateApply(); [apA1,apA2].forEach(e=>['loadstart','loadedmetadata','playing'].forEach(ev=>e.addEventListener(ev,()=>{ if(e.playbackRate!==apRate){ try{ e.playbackRate=apRate; }catch(_){} } })));
+const apRateTxt=r=>r===1?'عادي':('×'+ar(r).replace('.','٫'));
 const AP_SIL='data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=';
 function apPrime(){ try{ const e=apSpare(); e.src=AP_SIL; const p=e.play(); if(p&&p.then) p.then(()=>{ try{e.pause();}catch(_){} }).catch(()=>{}); }catch(e){} }
 function apNextVerse(){ const all=apVerses(), i=apV?all.indexOf(apV):-1; return i>=0?all[i+1]||null:null; }
@@ -1260,16 +1264,17 @@ function apPreload(){ try{ const u=apAhead(), e=apSpare(); if(u && e.getAttribut
 const apPanel=$('apPanel'), fab2=$('fab2');
 for (const k in REC){ const o=document.createElement('option'); o.value=k; o.textContent=REC[k][0]; $('apRec').appendChild(o); }
 $('apRec').value=apRec; $('apRepSel').value=String(apRepN);
-function apNm(){ $('apName').textContent='🎙 '+REC[apRec][0]+(apRepN>1?' · تكرار '+ar(apRepN):'')+' ▾'; }
+function apNm(){ $('apName').textContent='🎙 '+REC[apRec][0]+(apRepN>1?' · تكرار '+ar(apRepN):'')+(apRate!==1?' · '+apRateTxt(apRate):'')+' ▾'; }
 function apBody(){ document.body.classList.toggle('ao',apOn||!apPanel.hidden); }
 apNm();
-function apOpt(){ document.querySelectorAll('#apRecL button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===apRec))); document.querySelectorAll('#apRepL button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===apRepN))); }
+function apOpt(){ document.querySelectorAll('#apRecL button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===apRec))); document.querySelectorAll('#apRepL button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===apRepN))); document.querySelectorAll('#apSpL button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===apRate))); }
 for (let q=1;q<=114;q++){ const o=document.createElement('option'); o.value=q; o.textContent=ar(q)+'. '+names[q]; $('dlS').appendChild(o); }
 $('dlS').addEventListener('change',dlUi);
 $('dlGo').addEventListener('click',()=>{ if(dlRun){ dlRun.stop=true; return; } if(dlDone.has(apRec+'|'+dlSel())) dlDelete(); else dlStart(); });
 function apSelShow(b){ $('apSel').hidden=!b; if(b){ apOpt(); try{ const v=curVerse(); if(v && !dlRun) $('dlS').value=v.dataset.s; }catch(e){} dlUi(); } }
 for (const k in REC){ const b=document.createElement('button'); b.type='button'; b.dataset.v=k; b.textContent=REC[k][0]; b.addEventListener('click',()=>{ $('apRec').value=k; $('apRec').dispatchEvent(new Event('change')); }); $('apRecL').appendChild(b); }
 [[1,'بلا تكرار'],[2,'مرتين'],[3,'٣ مرات'],[5,'٥ مرات']].forEach(([v,t])=>{ const b=document.createElement('button'); b.type='button'; b.dataset.v=v; b.textContent=t; b.addEventListener('click',()=>{ $('apRepSel').value=String(v); $('apRepSel').dispatchEvent(new Event('change')); }); $('apRepL').appendChild(b); });
+[0.8,1,1.25,1.5,2].forEach(v=>{ const b=document.createElement('button'); b.type='button'; b.dataset.v=v; b.textContent=v===1?'سرعة عادية':apRateTxt(v); b.addEventListener('click',()=>{ apRate=v; store.set('apRate',v); apRateApply(); apNm(); apOpt(); }); $('apSpL').appendChild(b); });
 $('apName').addEventListener('click',()=>apSelShow($('apSel').hidden));
 $('apDone').addEventListener('click',()=>apSelShow(false));
 const apPad=(n,l)=>String(n).padStart(l,'0');
@@ -1375,7 +1380,7 @@ function apPlayFull(s){
     navigator.mediaSession.setActionHandler('play',()=>apToggle()); navigator.mediaSession.setActionHandler('pause',()=>apToggle());
     navigator.mediaSession.setActionHandler('nexttrack',()=>apStep(1)); navigator.mediaSession.setActionHandler('previoustrack',()=>apStep(-1)); } }catch(e){}
   try{ apSpare().pause(); }catch(e){}
-  apAudio._rt=0; apAudio.src=apFullUrl(s); const p=apAudio.play(); if(p&&p.catch) p.catch(apPC); apUi(); apPrime(); toast('سورة '+names[s]+' · بدون تظليل الآيات');
+  apAudio._rt=0; apAudio.src=apFullUrl(s); const p=apAudio.play(); if(p&&p.catch) p.catch(apPC); apUi(); apPrime(); toast('سورة '+names[s]+' (من البداية - كاملة)');
 }
 function apPC(er){ if(er&&er.name==='AbortError') return; if(er&&er.name==='NotAllowedError'){ apFail(); return; } apErr(apAudio); }
 function apErr(e){ // إنترنت ضعيف: أعد المحاولة قبل ما توقف
