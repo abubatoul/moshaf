@@ -175,6 +175,7 @@ body.vo #fab2,body.vo #apPanel{display:none}
 #apSel .dlrow select{flex:1;max-width:none;font-size:.85rem;padding:.35rem .4rem}
 #apSel .dlrow button{flex:none;min-width:5.5rem}
 #apSel #dlSt{margin:.3rem 0 0;font-size:.78rem;color:var(--muted);text-align:center}
+#apSel #dlSt.full{font-size:.92rem;font-weight:700;color:var(--ink,#1f3b2d);background:#eef4ef;border:1px solid #cfe0d3;border-radius:10px;padding:.5rem .6rem;line-height:1.6}
 #apSel #apDone{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 body.ao #play,body.ao .speed{display:none}
 body.ao .apc{display:flex}
@@ -765,7 +766,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٣٤ · ٢٠/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٣٥ · ٢٠/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1303,7 +1304,8 @@ async function apWarm(s){
 function dlSel(){ return +$('dlS').value; }
 function dlUi(){
   if(!$('dlS')) return; const s=dlSel(), k=apRec+'|'+s, st=$('dlSt'), b=$('dlGo');
-  if (REC[apRec][2]){ b.textContent='⬇ تحميل'; b.disabled=true; st.textContent='هذا القارئ سورة كاملة بدون تظليل، والتحميل غير متاح'; return; }
+  if (REC[apRec][2]){ b.textContent='⬇ تحميل'; b.disabled=true; st.className='full'; st.textContent='هذا القارئ سورة كاملة بدون تظليل، والتحميل غير متاح'; return; }
+  st.className='';
   if (dlRun && dlRun.k===k){ b.textContent='إيقاف'; return; }
   if (dlRun){ b.textContent='⬇ تحميل'; b.disabled=true; return; } b.disabled=false;
   if (dlDone.has(k)){ b.textContent='🗑 حذف'; st.textContent='محمّل على جهازك ✓ ('+ar(Math.max(1,Math.round((dlDone.get(k).bytes||0)/1048576)))+' ميجا)'; }
