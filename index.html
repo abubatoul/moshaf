@@ -169,6 +169,7 @@ body.vo #fab2,body.vo #apPanel{display:none}
 #apSel .aprep{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem}
 #apSel button{font:inherit;font-size:.85rem;min-height:2.2rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:.2rem .3rem;cursor:pointer}
 #apSel button{font-weight:700}
+.tools button,.seg button,.set .act,.go button,.endnav button,#shSheet button,#instSheet button,#bmSheet button,.sh-top button{font-weight:700}
 #apSel button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 #apSel .dlrow{display:flex;gap:.4rem}
 #apSel .dlrow select{flex:1;max-width:none;font-size:.85rem;padding:.35rem .4rem}
@@ -764,7 +765,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٣٠ · ٢٠/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٣١ · ٢٠/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
