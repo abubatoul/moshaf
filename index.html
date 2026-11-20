@@ -175,7 +175,7 @@ body.vo #fab2,body.vo #apPanel{display:none}
 #apSel .dlrow select{flex:1;max-width:none;font-size:.85rem;padding:.35rem .4rem}
 #apSel .dlrow button{flex:none;min-width:5.5rem}
 #apSel #dlSt{margin:.3rem 0 0;font-size:.78rem;color:var(--muted);text-align:center}
-#apSel #dlSt.full{font-size:.92rem;font-weight:700;color:var(--ink,#1f3b2d);background:#eef4ef;border:1px solid #cfe0d3;border-radius:10px;padding:.5rem .6rem;line-height:1.6}
+#apSel #dlSt.full{font-size:.92rem;font-weight:700;color:#b3261e;background:#fdf1f0;border:1px solid #f0c4c0;border-radius:10px;padding:.5rem .6rem;line-height:1.6}
 #apSel #apDone{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 body.ao #play,body.ao .speed{display:none}
 body.ao .apc{display:flex}
@@ -766,7 +766,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٣٥ · ٢٠/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٣٦ · ٢٠/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
