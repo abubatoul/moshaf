@@ -763,7 +763,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٢٧ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٢٨ · ٢٠/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1241,7 +1241,7 @@ function qStart(){
 }
 $('qmic').addEventListener('click',()=>{ closeSheet(); if(voiceOn) return; vStart(); });
 // ===== مشغّل صوت القارئ (آية بآية من EveryAyah) =====
-const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['المنشاوي','Minshawy_Murattal_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps']};
+const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['المنشاوي','Minshawy_Murattal_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://server16.mp3quran.net/peshawa/Rewayat-Hafs-A-n-Assem/']};
 let apRec=store.get('apRec','afasy'); if(!REC[apRec]) apRec='afasy';
 let apRepN=store.get('apRep',1); if(![1,2,3,5].includes(apRepN)) apRepN=1;
 let apOn=false, apPlaying=false, apV=null, apLeft=1, apQueue=[], apBusy=false, apPf=null;
@@ -1296,6 +1296,7 @@ async function apWarm(s){
 function dlSel(){ return +$('dlS').value; }
 function dlUi(){
   if(!$('dlS')) return; const s=dlSel(), k=apRec+'|'+s, st=$('dlSt'), b=$('dlGo');
+  if (REC[apRec][2]){ b.textContent='⬇ تحميل'; b.disabled=true; st.textContent='هذا القارئ سورة كاملة بدون تظليل، والتحميل غير متاح'; return; }
   if (dlRun && dlRun.k===k){ b.textContent='إيقاف'; return; }
   if (dlRun){ b.textContent='⬇ تحميل'; b.disabled=true; return; } b.disabled=false;
   if (dlDone.has(k)){ b.textContent='🗑 حذف'; st.textContent='محمّل على جهازك ✓ ('+ar(Math.max(1,Math.round((dlDone.get(k).bytes||0)/1048576)))+' ميجا)'; }
@@ -1356,19 +1357,50 @@ function apPrefetchOld(v){
   try{ const all=apVerses(), i=all.indexOf(v), n=all[i+1]; if(!n) return; const l=apList(n); apPf=new Audio(); apPf.preload='auto'; apPf.src=l[0]; }catch(e){}
 }
 function apPlayVerse(v){
+  if (apIsFull()){ apPlayFull(+v.dataset.s); return; }
   if (voiceOn) vStop(); stop();
   apOn=true; apPlaying=true; apV=v; apQueue=apList(v); apLeft=apRepN;
   apMark(v); apMeta(v); apWarm(+v.dataset.s);
   try{ apSpare().pause(); }catch(e){}
-  apAudio.src=apQueue.shift(); const p=apAudio.play(); if(p&&p.catch) p.catch(apFail); apUi(); apPrime(); setTimeout(apPreload,400);
+  apAudio._rt=0; apAudio.src=apQueue.shift(); const p=apAudio.play(); if(p&&p.catch) p.catch(apPC); apUi(); apPrime(); setTimeout(apPreload,400);
 }
+let apFullS=0;
+const apIsFull=()=>!!REC[apRec][2];
+function apFullUrl(s){ return REC[apRec][2]+apPad(s,3)+'.mp3'; }
+function apPlayFull(s){
+  if (voiceOn) vStop(); stop();
+  apOn=true; apPlaying=true; apV=null; apFullS=s; apQueue=[]; apLeft=apRepN;
+  document.querySelectorAll('#text .v.cur').forEach(x=>x.classList.remove('cur'));
+  try{ if('mediaSession' in navigator){ navigator.mediaSession.metadata=new MediaMetadata({title:'سورة '+names[s],artist:REC[apRec][0],album:'القرآن الكريم'});
+    navigator.mediaSession.setActionHandler('play',()=>apToggle()); navigator.mediaSession.setActionHandler('pause',()=>apToggle());
+    navigator.mediaSession.setActionHandler('nexttrack',()=>apStep(1)); navigator.mediaSession.setActionHandler('previoustrack',()=>apStep(-1)); } }catch(e){}
+  try{ apSpare().pause(); }catch(e){}
+  apAudio._rt=0; apAudio.src=apFullUrl(s); const p=apAudio.play(); if(p&&p.catch) p.catch(apPC); apUi(); apPrime(); toast('سورة '+names[s]+' · بدون تظليل الآيات');
+}
+function apPC(er){ if(er&&er.name==='AbortError') return; if(er&&er.name==='NotAllowedError'){ apFail(); return; } apErr(apAudio); }
+function apErr(e){ // إنترنت ضعيف: أعد المحاولة قبل ما توقف
+  if(!apOn||e!==apAudio) return; const src=e.getAttribute('src'); if(!src||src===AP_SIL) return;
+  e._rt=(e._rt||0)+1;
+  if (e._rt>4){ e._rt=0; apFail(); return; }
+  const t=e.currentTime||0;
+  setTimeout(()=>{ if(!apOn||e!==apAudio||e.getAttribute('src')!==src) return;
+    const go=()=>{ try{ if(t>1) e.currentTime=t-0.5; }catch(_){} if(apPlaying){ const p=e.play(); if(p&&p.catch) p.catch(()=>{}); } };
+    e.addEventListener('loadedmetadata',go,{once:true}); e.load(); },1200*e._rt);
+}
+[apA1,apA2].forEach(e=>e.addEventListener('playing',()=>{ e._rt=0; e._st=0; }));
+(function(){ let lt=-1; setInterval(()=>{ // مراقب التعليق: لو وقف التحميل ١٠ ثواني أعد المحاولة
+  const e=apAudio; if(!apOn||!apPlaying||e.paused||e.ended||document.hidden){ lt=-1; return; }
+  if (e.readyState<3 && e.currentTime===lt){ e._st=(e._st||0)+1; if(e._st>=3){ e._st=0; apErr(e); } } else e._st=0;
+  lt=e.currentTime; },3500); })();
 function apFail(){ if(!apOn) return; if(document.hidden){ apPlaying=false; apUi(); return; } apStop(); toast('تعذر تشغيل '+REC[apRec][0]+'. تحقق من الاتصال أو جرّب قارئًا آخر'); }
 function apStop(){
   const was=apOn; apOn=false; apPlaying=false; apQueue=[]; try{ [apA1,apA2].forEach(e=>{ e.pause(); e.removeAttribute('src'); e.load(); }); }catch(e){}
   if (apV){ apV.classList.remove('cur'); } apV=null; apUi(); if(was) scheduleGuide();
 }
 async function apStep(dir){
-  if (apBusy) return; apBusy=true;
+  if (apBusy) return;
+  if (apOn && apIsFull()){ const t=apFullS+dir; if(t<1||t>114){ apStop(); return; } apPlayFull(t); return; }
+  apBusy=true;
   try{
     let all=apVerses(), i=apV?all.indexOf(apV):-1, t=all[i+dir];
     if (!t){
@@ -1384,11 +1416,12 @@ async function apStep(dir){
 function apNextPlay(src){ // شغّل الرابط التالي على العنصر الجاهز مسبقًا (أقل فجوة، يعمل والشاشة مقفلة)
   const sp=apSpare(), old=apAudio;
   if (sp.getAttribute('src')===src){ apAudio=sp; } else { apAudio.src=src; }
-  const p=apAudio.play(); if(p&&p.catch) p.catch(apFail);
+  const p=apAudio.play(); if(p&&p.catch) p.catch(apPC);
   if (apAudio!==old){ try{ old.pause(); }catch(e){} }
   apPlaying=true; apUi(); setTimeout(apPreload,300);
 }
 function apEnded(el){
+  if (apOn && el===apAudio && apIsFull()){ if(apLeft>1){ apLeft--; el._rt=0; el.currentTime=0; el.play().catch(apPC); return; } if(apFullS>=114){ apStop(); toast('اكتمل المصحف'); return; } apPlayFull(apFullS+1); return; }
   if (!apOn||!apV||el!==apAudio) return;
   if (apQueue.length){ apNextPlay(apQueue.shift()); return; }
   if (apLeft>1){ apLeft--; apNextPlay(apUrl(+apV.dataset.s,+apV.dataset.a)); return; }
@@ -1397,16 +1430,16 @@ function apEnded(el){
   apStep(1);
 }
 apA1.addEventListener('ended',()=>apEnded(apA1)); apA2.addEventListener('ended',()=>apEnded(apA2));
-[apA1,apA2].forEach(e=>e.addEventListener('error',()=>{ if(apOn && e===apAudio && e.getAttribute('src') && e.getAttribute('src')!==AP_SIL) apFail(); }));
+[apA1,apA2].forEach(e=>e.addEventListener('error',()=>apErr(e)));
 function apToggle(){
   if (!apOn){ const v=curVerse(); if(v) apPlayVerse(v); return; }
-  if (apPlaying){ apAudio.pause(); apPlaying=false; } else { apAudio.play().catch(apFail); apPlaying=true; }
+  if (apPlaying){ apAudio.pause(); apPlaying=false; } else { apAudio.play().catch(apPC); apPlaying=true; }
   apUi();
 }
 $('apPlay').addEventListener('click',apToggle);
 $('apNextB').addEventListener('click',()=>{ if(!apOn){ const v=curVerse(); if(v) apPlayVerse(v); } else apStep(1); });
 $('apPrev').addEventListener('click',()=>{ if(!apOn){ const v=curVerse(); if(v) apPlayVerse(v); } else apStep(-1); });
-$('apRec').addEventListener('change',()=>{ apRec=$('apRec').value; store.set('apRec',apRec); store.set('apChosen',true); apNm(); apOpt(); dlUi(); { const v=apV||curVerse(); if(v) apWarm(+v.dataset.s); } if(apOn&&apV) apPlayVerse(apV); });
+$('apRec').addEventListener('change',()=>{ apRec=$('apRec').value; store.set('apRec',apRec); store.set('apChosen',true); apNm(); apOpt(); dlUi(); { const v=apV||curVerse(); if(v) apWarm(+v.dataset.s); } if(apOn){ const v=apV||apVerses().find(x=>+x.dataset.s===apFullS)||curVerse(); if(v) apPlayVerse(v); } });
 $('apRepSel').addEventListener('change',()=>{ apRepN=+$('apRepSel').value; store.set('apRep',apRepN); apLeft=apRepN; apNm(); apOpt(); });
 $('apX').addEventListener('click',()=>{ apStop(); apHide(); });
 fab2.addEventListener('click',()=>{ try{ const v=curVerse(); if(v) apWarm(+v.dataset.s); }catch(e){} const o=apPanel.hidden; setPanel.hidden=true; goPanel.hidden=true; fsPanel.hidden=true; apPanel.hidden=!o; if(o) apSelShow(!store.get('apChosen',false)); apBody(); });
