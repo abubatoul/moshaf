@@ -808,7 +808,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ١٫١٧ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ١٫١٨ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1434,7 +1434,7 @@ const apIsFull=()=>!!REC[apRec][2];
 function apFullUrl(s){ return REC[apRec][2]+apPad(s,3)+'.mp3'; }
 function apPlayFull(s){
   if ((REC[apRec][3]||[]).includes(s)){ toast('سورة '+names[s]+' غير متوفرة عند هذا القارئ'); if(s<114){ apPlayFull(s+1); } return; }
-  if (voiceOn) vStop();
+  if (voiceOn) vStop(); const apChain=apOn&&apPlaying;
   apOn=true; apPlaying=true; apV=null; apFullS=s; apQueue=[]; apLeft=apRepN;
   document.querySelectorAll('#text .v.cur').forEach(x=>x.classList.remove('cur'));
   try{ if('mediaSession' in navigator){ navigator.mediaSession.metadata=new MediaMetadata({title:'سورة '+names[s],artist:REC[apRec][0],album:'القرآن الكريم'});
@@ -1442,6 +1442,7 @@ function apPlayFull(s){
     navigator.mediaSession.setActionHandler('nexttrack',()=>apStep(1)); navigator.mediaSession.setActionHandler('previoustrack',()=>apStep(-1)); } }catch(e){}
   try{ apSpare().pause(); }catch(e){}
   try{ const k=ayahJuz[s+':1']; if(k) render(k,null,{s:s,a:1}); }catch(e){}
+  if(!apChain && !running) start();
   apAudio._rt=0; apAudio.src=apFullUrl(s); const p=apAudio.play(); if(p&&p.catch) p.catch(apPC); apUi(); apPrime(); toast('سورة '+names[s]+' (من البداية - كاملة)');
 }
 function apPC(er){ if(er&&er.name==='AbortError') return; if(er&&er.name==='NotAllowedError'){ apFail(); return; } apErr(apAudio); }
