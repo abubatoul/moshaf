@@ -166,6 +166,8 @@ body.vo #fab2,body.vo #apPanel{display:none}
 #apPanel .ap-name{flex:1;min-width:0;font:inherit;font-size:.9rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;height:2.2rem;padding:0 .8rem;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:start}
 #apSel{display:grid;gap:.5rem;max-height:56vh;overflow:auto}
 #apSel .apr{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+#apSel .sl{display:grid;gap:.2rem;font-size:.78rem;color:var(--muted);font-weight:700}
+#apSel select{font:inherit;font-weight:700;font-size:.95rem;width:100%;max-width:none;min-height:2.6rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:10px;padding:.3rem .5rem}
 #apSel .aprep{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem}
 #apSel button{font:inherit;font-size:.85rem;min-height:2.2rem;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:8px;padding:.2rem .3rem;cursor:pointer}
 #apSel button{font-weight:700}
@@ -216,7 +218,7 @@ body.vo #fab{background:#d33!important;border-color:#d33!important}
   <div id="micBar" hidden><i class="dot"></i><span id="micTxt" class="t"></span><button id="micStop" type="button">إيقاف</button></div>
   <div id="apPanel" hidden>
     <div class="ap-row"><button class="ap-name" id="apName" type="button"></button><button class="ap-x" id="apX" type="button" aria-label="إغلاق">✕</button></div>
-    <div id="apSel" hidden><div class="apr" id="apRecL"></div><div class="aprep" id="apRepL"></div><div class="aprep" id="apSpL" style="grid-template-columns:repeat(5,1fr)"></div><div class="apdl"><div class="dlrow"><select id="dlS" aria-label="السورة"></select><button id="dlGo" type="button">⬇ تحميل</button></div><p id="dlSt"></p></div><button id="apDone" type="button">تم</button></div>
+    <div id="apSel" hidden><label class="sl">القارئ<select id="apRecS"></select></label><div class="apr"><label class="sl">التكرار<select id="apRepS"></select></label><label class="sl">السرعة<select id="apSpS"></select></label></div><div class="apdl"><div class="dlrow"><select id="dlS" aria-label="السورة"></select><button id="dlGo" type="button">⬇ تحميل</button></div><p id="dlSt"></p></div><button id="apDone" type="button">تم</button></div>
     <div hidden><select id="apRec" aria-label="القارئ"></select><select id="apRepSel" aria-label="تكرار الآية"><option value="1">بلا تكرار</option><option value="2">مرتين</option><option value="3">٣ مرات</option><option value="5">٥ مرات</option></select></div>
     <p class="ap-note">الصوت من EveryAyah.com · يحتاج إنترنت إلا للسور المحمّلة</p>
   </div>
@@ -766,7 +768,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٤١ · ٢٠/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ٢٫٤٢ · ٢٠/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1270,14 +1272,17 @@ $('apRec').value=apRec; $('apRepSel').value=String(apRepN);
 function apNm(){ $('apName').textContent='🎙 '+REC[apRec][0]+(apRepN>1?' · تكرار '+ar(apRepN):'')+(apRate!==1?' · '+apRateTxt(apRate):'')+' ▾'; }
 function apBody(){ document.body.classList.toggle('ao',apOn||!apPanel.hidden); }
 apNm();
-function apOpt(){ document.querySelectorAll('#apRecL button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===apRec))); document.querySelectorAll('#apRepL button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===apRepN))); document.querySelectorAll('#apSpL button').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.v===apRate))); }
+function apOpt(){ $('apRecS').value=apRec; $('apRepS').value=String(apRepN); $('apSpS').value=String(apRate); }
 for (let q=1;q<=114;q++){ const o=document.createElement('option'); o.value=q; o.textContent=ar(q)+'. '+names[q]; $('dlS').appendChild(o); }
 $('dlS').addEventListener('change',dlUi);
 $('dlGo').addEventListener('click',()=>{ if(dlRun){ dlRun.stop=true; return; } if(dlDone.has(apRec+'|'+dlSel())) dlDelete(); else dlStart(); });
 function apSelShow(b){ $('apSel').hidden=!b; if(b){ apOpt(); try{ const v=curVerse(); if(v && !dlRun) $('dlS').value=v.dataset.s; }catch(e){} dlUi(); } }
-for (const k in REC){ const b=document.createElement('button'); b.type='button'; b.dataset.v=k; b.textContent=REC[k][0]; b.addEventListener('click',()=>{ $('apRec').value=k; $('apRec').dispatchEvent(new Event('change')); }); $('apRecL').appendChild(b); }
-[[1,'بلا تكرار'],[2,'مرتين'],[3,'٣ مرات'],[5,'٥ مرات']].forEach(([v,t])=>{ const b=document.createElement('button'); b.type='button'; b.dataset.v=v; b.textContent=t; b.addEventListener('click',()=>{ $('apRepSel').value=String(v); $('apRepSel').dispatchEvent(new Event('change')); }); $('apRepL').appendChild(b); });
-[0.8,1,1.25,1.5,2].forEach(v=>{ const b=document.createElement('button'); b.type='button'; b.dataset.v=v; b.textContent=v===1?'سرعة عادية':apRateTxt(v); b.addEventListener('click',()=>{ apRate=v; store.set('apRate',v); apRateApply(); apNm(); apOpt(); }); $('apSpL').appendChild(b); });
+for (const k in REC){ const o=document.createElement('option'); o.value=k; o.textContent=REC[k][0]; $('apRecS').appendChild(o); }
+$('apRecS').addEventListener('change',()=>{ $('apRec').value=$('apRecS').value; $('apRec').dispatchEvent(new Event('change')); });
+[[1,'بلا تكرار'],[2,'مرتين'],[3,'٣ مرات'],[5,'٥ مرات']].forEach(([v,t])=>{ const o=document.createElement('option'); o.value=v; o.textContent=t; $('apRepS').appendChild(o); });
+$('apRepS').addEventListener('change',()=>{ $('apRepSel').value=$('apRepS').value; $('apRepSel').dispatchEvent(new Event('change')); });
+[0.8,1,1.25,1.5,2].forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v===1?'سرعة عادية':apRateTxt(v); $('apSpS').appendChild(o); });
+$('apSpS').addEventListener('change',()=>{ apRate=+$('apSpS').value; store.set('apRate',apRate); apRateApply(); apNm(); apOpt(); });
 $('apName').addEventListener('click',()=>apSelShow($('apSel').hidden));
 $('apDone').addEventListener('click',()=>apSelShow(false));
 const apPad=(n,l)=>String(n).padStart(l,'0');
