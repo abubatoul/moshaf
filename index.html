@@ -198,6 +198,11 @@ body.vo #fab2,body.vo #apPanel{display:none}
 #apSel #apDone{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 body.ao #play,body.ao .speed{display:none}
 body.ao .apc{display:flex}
+body.ao.fr .bar-in{flex-wrap:wrap;row-gap:.5rem}
+body.ao.fr .bar-in::after{content:'';order:3;flex-basis:100%;height:0}
+body.ao.fr #fab2{order:0}body.ao.fr .apc{order:1}body.ao.fr #fab{order:2}
+body.ao.fr #play{display:grid;order:4;width:2.8rem;height:2.8rem}
+body.ao.fr .speed{display:flex;order:4}
 .apc{display:none;flex:1;justify-content:center;align-items:center;gap:.8rem;direction:ltr}
 .apc button{font:inherit;font-size:1.2rem;width:2.8rem;height:2.8rem;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;padding:0}
 .apc #apPlay{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);width:3.4rem;height:3.4rem}
@@ -785,7 +790,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ١٫١٣ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ١٫١٤ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1287,7 +1292,7 @@ const apPanel=$('apPanel'), fab2=$('fab2');
 for (const k in REC){ const o=document.createElement('option'); o.value=k; o.textContent=REC[k][0]; $('apRec').appendChild(o); }
 $('apRec').value=apRec; $('apRepSel').value=String(apRepN);
 function apNm(){ if(!$('apSel').hidden){ $('apName').textContent='🎙 خيارات الاستماع'; return; } $('apName').textContent='🎙 '+REC[apRec][0]+(apRepN>1?' · تكرار '+ar(apRepN):'')+(apRate!==1?' · '+apRateTxt(apRate):'')+' ▾'; }
-function apBody(){ document.body.classList.toggle('ao',apOn||!apPanel.hidden); }
+function apBody(){ const on=apOn||!apPanel.hidden; document.body.classList.toggle('ao',on); let fr=false; try{ fr=on&&apIsFull(); }catch(e){} document.body.classList.toggle('fr',fr); }
 apNm();
 function apOpt(){ $('apRecB').textContent=REC[apRec][0]; document.querySelectorAll('#apRecP button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===apRec))); $('apRepS').value=String(apRepN); $('apSpS').value=String(apRate); try{ ddSync(); }catch(e){} }
 for (let q=1;q<=114;q++){ const o=document.createElement('option'); o.value=q; o.textContent=ar(q)+'. '+names[q]; $('dlS').appendChild(o); }
@@ -1337,7 +1342,7 @@ async function apWarm(s){
 function dlSel(){ return +$('dlS').value; }
 function dlUi(){
   if(!$('dlS')) return; const s=dlSel(), k=apRec+'|'+s, st=$('dlSt'), b=$('dlGo');
-  if (REC[apRec][2]){ b.textContent='⬇ تحميل'; b.disabled=true; st.className='full'; st.textContent='لهذا القارئ سور كاملة بدون تظليل، والتحميل غير متاح'; return; }
+  if (REC[apRec][2]){ b.textContent='بلا تحميل'; b.disabled=true; st.className='full'; st.textContent='لهذا القارئ سور كاملة - قراءة بلا تتبع'; return; }
   st.className='';
   if (dlRun && dlRun.k===k){ b.textContent='إيقاف'; return; }
   if (dlRun){ b.textContent='⬇ تحميل'; b.disabled=true; return; } b.disabled=false;
@@ -1418,6 +1423,7 @@ function apPlayFull(s){
     navigator.mediaSession.setActionHandler('play',()=>apToggle()); navigator.mediaSession.setActionHandler('pause',()=>apToggle());
     navigator.mediaSession.setActionHandler('nexttrack',()=>apStep(1)); navigator.mediaSession.setActionHandler('previoustrack',()=>apStep(-1)); } }catch(e){}
   try{ apSpare().pause(); }catch(e){}
+  try{ const k=ayahJuz[s+':1']; if(k) render(k,null,{s:s,a:1}); }catch(e){}
   apAudio._rt=0; apAudio.src=apFullUrl(s); const p=apAudio.play(); if(p&&p.catch) p.catch(apPC); apUi(); apPrime(); toast('سورة '+names[s]+' (من البداية - كاملة)');
 }
 function apPC(er){ if(er&&er.name==='AbortError') return; if(er&&er.name==='NotAllowedError'){ apFail(); return; } apErr(apAudio); }
@@ -1482,7 +1488,7 @@ function apToggle(){
 $('apPlay').addEventListener('click',apToggle);
 $('apNextB').addEventListener('click',()=>{ if(!apOn){ const v=curVerse(); if(v) apPlayVerse(v); } else apStep(1); });
 $('apPrev').addEventListener('click',()=>{ if(!apOn){ const v=curVerse(); if(v) apPlayVerse(v); } else apStep(-1); });
-$('apRec').addEventListener('change',()=>{ apRec=$('apRec').value; store.set('apRec',apRec); store.set('apChosen',true); apNm(); apOpt(); dlUi(); { const v=apV||curVerse(); if(v) apWarm(+v.dataset.s); } if(apOn){ const v=apV||apVerses().find(x=>+x.dataset.s===apFullS)||curVerse(); if(v) apPlayVerse(v); } });
+$('apRec').addEventListener('change',()=>{ apRec=$('apRec').value; apBody(); store.set('apRec',apRec); store.set('apChosen',true); apNm(); apOpt(); dlUi(); { const v=apV||curVerse(); if(v) apWarm(+v.dataset.s); } if(apOn){ const v=apV||apVerses().find(x=>+x.dataset.s===apFullS)||curVerse(); if(v) apPlayVerse(v); } });
 $('apRepSel').addEventListener('change',()=>{ apRepN=+$('apRepSel').value; store.set('apRep',apRepN); apLeft=apRepN; apNm(); apOpt(); });
 $('apX').addEventListener('click',()=>{ apStop(); apHide(); });
 fab2.addEventListener('click',()=>{ try{ const v=curVerse(); if(v) apWarm(+v.dataset.s); }catch(e){} const o=apPanel.hidden; setPanel.hidden=true; goPanel.hidden=true; fsPanel.hidden=true; apPanel.hidden=!o; if(o) apSelShow(!store.get('apChosen',false)); apBody(); });
