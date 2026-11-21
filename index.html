@@ -768,7 +768,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ٢٫٤٣ · ٢٠/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ١٫٠١ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1269,7 +1269,7 @@ function apPreload(){ try{ const u=apAhead(), e=apSpare(); if(u && e.getAttribut
 const apPanel=$('apPanel'), fab2=$('fab2');
 for (const k in REC){ const o=document.createElement('option'); o.value=k; o.textContent=REC[k][0]; $('apRec').appendChild(o); }
 $('apRec').value=apRec; $('apRepSel').value=String(apRepN);
-function apNm(){ if(!$('apSel').hidden){ $('apName').textContent='🎙 الخيارات ▴'; return; } $('apName').textContent='🎙 '+REC[apRec][0]+(apRepN>1?' · تكرار '+ar(apRepN):'')+(apRate!==1?' · '+apRateTxt(apRate):'')+' ▾'; }
+function apNm(){ if(!$('apSel').hidden){ $('apName').textContent='🎙 خيارات الاستماع ▴'; return; } $('apName').textContent='🎙 '+REC[apRec][0]+(apRepN>1?' · تكرار '+ar(apRepN):'')+(apRate!==1?' · '+apRateTxt(apRate):'')+' ▾'; }
 function apBody(){ document.body.classList.toggle('ao',apOn||!apPanel.hidden); }
 apNm();
 function apOpt(){ $('apRecS').value=apRec; $('apRepS').value=String(apRepN); $('apSpS').value=String(apRate); }
