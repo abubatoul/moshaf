@@ -808,7 +808,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ١٫١٩ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ١٫٢٠ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1335,7 +1335,7 @@ function ddify(id,align){ const sel=$(id); sel.style.display='none'; const btn=d
 ddify('apRepS','c'); ddify('apSpS','c'); ddify('dlS','r');
 function ddSync(){ DD.forEach(d=>d.sync()); }
 $('apName').addEventListener('click',()=>apSelShow($('apSel').hidden));
-$('apDone').addEventListener('click',()=>apSelShow(false));
+$('apDone').addEventListener('click',()=>{ apSelShow(false); if(apOn) apHide(); });
 const apPad=(n,l)=>String(n).padStart(l,'0');
 const apBlobs=new Map();
 const apKey=(rec,s,a)=>rec+'|'+apPad(s,3)+'|'+apPad(a,3);
@@ -1407,8 +1407,9 @@ function apUi(){
 }
 function apMark(v){
   document.querySelectorAll('#text .v.cur').forEach(x=>x.classList.remove('cur')); v.classList.add('cur'); curSet=new Set();
-  const r=v.getBoundingClientRect(), line=innerHeight*0.38;
-  if (r.top<innerHeight*0.12 || r.top>innerHeight*0.45 || r.bottom>innerHeight*0.62) scrollBy({top:r.top-line*0.8,behavior:'smooth'});
+  const r=v.getBoundingClientRect(); let vb=innerHeight; try{ if(!apPanel.hidden) vb=Math.min(vb,apPanel.getBoundingClientRect().top); }catch(e){} try{ const bb=document.querySelector('.bar'); if(bb){ const t0=bb.getBoundingClientRect().top; if(t0>innerHeight*0.3) vb=Math.min(vb,t0); } }catch(e){}
+  const line=vb*0.30;
+  if (r.top<vb*0.10 || r.top>vb*0.50 || r.bottom>vb*0.88) scrollBy({top:r.top-line,behavior:'smooth'});
 }
 function apMeta(v){
   try{ if('mediaSession' in navigator){
@@ -1436,7 +1437,7 @@ async function apTmLoad(s){
   const rec=apRec, rid=REC[rec][4], key='tm|'+rid+'|'+s; let arr=null;
   try{ const c=localStorage.getItem(key); if(c) arr=JSON.parse(c); }catch(e){}
   if(!arr){
-    try{ const r=await fetch('https://www.mp3quran.net/api/v3/ayat_timing?surah='+s+'&read='+rid,{mode:'cors'}); if(!r.ok) throw 0; const j=await r.json();
+    try{ const ac=new AbortController(); const to=setTimeout(()=>ac.abort(),6000); let r; try{ r=await fetch('https://www.mp3quran.net/api/v3/ayat_timing?surah='+s+'&read='+rid,{mode:'cors',signal:ac.signal}); }finally{ clearTimeout(to); } if(!r.ok) throw 0; const j=await r.json();
       arr=j.filter(x=>x&&x.ayah>0&&x.end_time>x.start_time).map(x=>[+x.ayah,+x.start_time,+x.end_time]);
       if(arr.length) try{ localStorage.setItem(key,JSON.stringify(arr)); }catch(e){} }catch(e){ arr=null; }
   }
