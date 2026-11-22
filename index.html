@@ -808,7 +808,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ١٫٠١ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ١٫٠٣ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1314,7 +1314,7 @@ function apBody(){ const on=apOn||!apPanel.hidden; document.body.classList.toggl
 apNm();
 function apOpt(){ $('apRecB').textContent=REC[apRec][0]; document.querySelectorAll('#apRecP button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===apRec))); $('apRepS').value=String(apRepN); $('apSpS').value=String(apRate); try{ ddSync(); }catch(e){} }
 for (let q=1;q<=114;q++){ const o=document.createElement('option'); o.value=q; o.textContent=ar(q)+'. '+names[q]; $('dlS').appendChild(o); }
-$('dlS').addEventListener('change',()=>{ dlUi(); try{ if(apIsFull()) apPlayFull(dlSel()); }catch(e){} });
+$('dlS').addEventListener('change',()=>{ dlUi(); try{ const s=dlSel(); if(apIsFull()) apPlayFull(s); else if(apOn){ (async()=>{ try{ await render(ayahJuz[s+':1'],null,{s:s,a:1}); }catch(e){} const v=document.querySelector('#text .v[data-s="'+s+'"][data-a="1"]'); if(v) apPlayVerse(v); })(); } }catch(e){} });
 $('dlGo').addEventListener('click',()=>{ if(dlRun){ dlRun.stop=true; return; } if(dlDone.has(apRec+'|'+dlSel())) dlDelete(); else dlStart(); });
 function apSelShow(b){ $('apSel').hidden=!b; if(!b){ apRecP(false); DD.forEach(d=>d.close()); } apPanel.classList.toggle('opt',!!b); apNm(); if(b){ apOpt(); try{ const v=curVerse(); if(v && !dlRun) $('dlS').value=v.dataset.s; }catch(e){} dlUi(); try{ ddSync(); }catch(e){} } }
 function apRecP(b){ $('apRecP').hidden=!b; $('apRecB').setAttribute('aria-expanded',String(!!b)); if(b){ const p=document.querySelector('#apRecP button[aria-pressed="true"]'); if(p) $('apRecP').scrollTop=Math.max(0,p.offsetTop-40); } }
@@ -1591,7 +1591,9 @@ juzSel.addEventListener('change',()=>{ vPos=-1; vIdx=null; });
 function savePlace(){ const v=verseAt(Math.round(innerHeight*0.38)); if(v) store.set('place',{s:+v.dataset.s,a:+v.dataset.a}); }
 let saveT=0;
 function syncTopSurah(){ try{ const v=curVerse(); if(v && surahSel.value!==v.dataset.s) surahSel.value=v.dataset.s; }catch(e){} }
-addEventListener('scroll',()=>{ clearTimeout(saveT); saveT=setTimeout(()=>{ savePlace(); syncTopSurah(); },300); },{passive:true});
+let syncT=0;
+addEventListener('scroll',()=>{ clearTimeout(saveT); saveT=setTimeout(savePlace,300); if(!syncT) syncT=setTimeout(()=>{ syncT=0; syncTopSurah(); },350); },{passive:true});
+setInterval(syncTopSurah,1500);
 addEventListener('pagehide',savePlace);
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) savePlace(); });
 function placeAt(v){ const r=v.getBoundingClientRect(); window.scrollTo(0,r.top+window.scrollY-innerHeight*0.38); pos=window.scrollY; scheduleGuide(); }
