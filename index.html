@@ -1674,8 +1674,11 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 </style>
 <script>
 // رسالة إهداء الثواب: تظهر عند فتح المصحف ثم تختفي
+// مؤقتًا معطّلة: لإرجاعها غيّر false إلى true
+const EHDA_ON=false;
 (function(){
   try{
+    if(!EHDA_ON) return;
     try{ if(sessionStorage.getItem('mq_noehda')){ sessionStorage.removeItem('mq_noehda'); return; } }catch(e){}
     const d=document.createElement('div'); d.id='ehda'; d.setAttribute('role','dialog'); d.setAttribute('aria-label','إهداء الثواب');
     d.innerHTML='<div class="card"><p class="lead">يُهدي ثوابه إلى:</p><p class="nm"><small>المرحوم:</small>عبد مطر</p><p class="nm"><small>المرحوم:</small>محمد عبد</p><p class="all">وإلى جميع أمواتنا وأموات المسلمين</p><button type="button">آمين</button></div>';
