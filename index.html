@@ -808,7 +808,7 @@ $('instBtn').addEventListener('click',()=>{
   setPanel.hidden=true; $('instSheet').hidden=false;
 });
 let instAfter=null;
-$('verNote').textContent='الإصدار ١٫٠٠ · ١٧/١١/٢٠٢٦ · موقع';
+$('verNote').textContent='الإصدار ١٫٠١ · ١٧/١١/٢٠٢٦ · موقع';
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
@@ -1590,7 +1590,8 @@ juzSel.addEventListener('change',()=>{ vPos=-1; vIdx=null; });
 // حفظ مكان القراءة تلقائياً بدون علامة: الآية عند خط القراءة
 function savePlace(){ const v=verseAt(Math.round(innerHeight*0.38)); if(v) store.set('place',{s:+v.dataset.s,a:+v.dataset.a}); }
 let saveT=0;
-addEventListener('scroll',()=>{ clearTimeout(saveT); saveT=setTimeout(savePlace,300); },{passive:true});
+function syncTopSurah(){ try{ const v=curVerse(); if(v && surahSel.value!==v.dataset.s) surahSel.value=v.dataset.s; }catch(e){} }
+addEventListener('scroll',()=>{ clearTimeout(saveT); saveT=setTimeout(()=>{ savePlace(); syncTopSurah(); },300); },{passive:true});
 addEventListener('pagehide',savePlace);
 document.addEventListener('visibilitychange',()=>{ if(document.hidden) savePlace(); });
 function placeAt(v){ const r=v.getBoundingClientRect(); window.scrollTo(0,r.top+window.scrollY-innerHeight*0.38); pos=window.scrollY; scheduleGuide(); }
