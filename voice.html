@@ -73,7 +73,7 @@ async function playFrom(s,a){
       try{ await audio.play(); }catch(e){ playing=false; show('تعذر التشغيل، تأكد من الإنترنت'); return; }
       await waitEnd(); if(my!==token) return;
       ayah++;
-      if(gapListen && ayah<=n){ const t=await listenOnce(1800,true); if(my!==token) return; if(t){ const r=await handle(t,true); if(r==='stop'||my!==token) return; } }
+      if(gapListen && ayah<=n){ const t=await listenOnce(3500,true); if(my!==token) return; if(t){ const r=await handle(t,true); if(r==='stop'||my!==token) return; } }
     }
     if(my!==token) return; surah++; ayah=1; save(); if(surah>114){ playing=false; await say('انتهى المصحف'); return; }
   }
@@ -81,11 +81,14 @@ async function playFrom(s,a){
 let recog=null, lastErr='', cur=null, active=false, endWaiters=[];
 function dbg(m){ try{ const d=$('dbg'); const t=new Date(); d.textContent=(m+' · '+t.getMinutes()+':'+t.getSeconds()+'\n'+d.textContent).split('\n').slice(0,9).join('\n'); }catch(e){} }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+let actx=null;
+function unlockBeep(){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); }catch(e){} }
+function beep(){ return new Promise(res=>{ try{ if(!actx){ res(); return; } const o=actx.createOscillator(), g=actx.createGain(); o.frequency.value=880; g.gain.value=0.25; o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime+0.12); setTimeout(res,170); }catch(e){ res(); } }); }
 function waitInactive(ms){ return new Promise(res=>{ if(!active){ res(); return; } const t=setTimeout(()=>{ active=false; res(); },ms); endWaiters.push(()=>{ clearTimeout(t); res(); }); }); }
 function getRecog(){
   if(recog) return recog;
   recog=new SR(); recog.lang='ar-SA'; recog.interimResults=true; recog.maxAlternatives=1; recog.continuous=false;
-  recog.onstart=()=>{ active=true; dbg('start'); }; recog.onaudiostart=()=>dbg('audio'); recog.onsoundstart=()=>dbg('sound'); recog.onspeechstart=()=>dbg('speech');
+  recog.onstart=()=>{ active=true; dbg('start'); }; recog.onaudiostart=()=>{ dbg('audio'); if(cur&&cur.onAudio) cur.onAudio(); }; recog.onsoundstart=()=>dbg('sound'); recog.onspeechstart=()=>dbg('speech');
   recog.onresult=e=>{ if(!cur) return; try{ const r=e.results[e.results.length-1]; cur.got=r[0].transcript; dbg('result: '+cur.got); if(r.isFinal) cur.fin(); }catch(_){} };
   recog.onerror=e=>{ dbg('error: '+(e&&e.error)); if(cur&&e&&e.error!=='aborted'){ cur.err=e.error||'error'; cur.fin(); } };
   recog.onend=()=>{ active=false; dbg('end'); const w=endWaiters; endWaiters=[]; w.forEach(f=>f()); if(cur) cur.fin(); };
@@ -97,10 +100,12 @@ async function listenOnce(ms,quiet){
   const r=getRecog();
   if(cur){ const old=cur; old.got=''; old.fin(); }
   if(active){ try{ r.abort(); }catch(e){} await waitInactive(900); }
+  if(quiet) await beep();
   return new Promise(res=>{
-    let done=false, tm=null;
-    const me={got:'',err:'',fin:()=>{ if(done) return; done=true; clearTimeout(tm); if(cur===me) cur=null; try{ r.abort(); }catch(e){} $('big').classList.remove('listen'); lastErr=me.err; res(me.got); }};
-    cur=me; tm=setTimeout(()=>me.fin(),ms||6000);
+    let done=false, tm=null; const win=ms||6000;
+    const me={got:'',err:'',fin:()=>{ if(done) return; done=true; clearTimeout(tm); if(cur===me) cur=null; try{ r.abort(); }catch(e){} $('big').classList.remove('listen'); lastErr=me.err; res(me.got); },
+      onAudio:()=>{ clearTimeout(tm); tm=setTimeout(()=>me.fin(),win); }};
+    cur=me; tm=setTimeout(()=>me.fin(),win+3500);
     $('big').classList.add('listen'); if(!quiet) $('bigT').textContent='أسمعك…';
     const go=(n)=>{ try{ r.start(); }catch(e){ if(n<2){ dbg('retry start'); setTimeout(()=>go(n+1),450); } else { me.err='start:'+(e&&e.message||e); dbg(me.err); me.fin(); } } };
     go(0);
@@ -162,7 +167,7 @@ async function session(){
 }
 const SILENT="data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 $('big').addEventListener('click',()=>{
-  if(!started){ started=true; try{ audio.src=SILENT; const pr=audio.play(); if(pr&&pr.catch) pr.catch(()=>{}); }catch(e){} }
+  unlockBeep(); if(!started){ started=true; try{ audio.src=SILENT; const pr=audio.play(); if(pr&&pr.catch) pr.catch(()=>{}); }catch(e){} }
   session();
 });
 $('bStop').addEventListener('click',()=>{ stopAudio(); try{ speechSynthesis.cancel(); }catch(e){} show('تم الإيقاف','اضغط للتحدث'); });
