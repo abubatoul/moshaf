@@ -16,7 +16,7 @@ body{display:flex;flex-direction:column}
 #row{display:flex;gap:10px;margin:10px 14px calc(14px + env(safe-area-inset-bottom))}
 #row button{flex:1;height:3.4rem;border-radius:16px;border:0;background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:1.1rem;font-weight:700}
 </style></head><body>
-<div id="top" role="status">المصحف بالصوت · نسخة تجريبية</div>
+<div id="top" role="status">المصحف بالصوت · نسخة تجريبية · <b id="ver"></b></div>
 <button id="big" type="button" aria-label="زر رئيسي. اضغط للتحدث بأمر صوتي"><span id="bigT">اضغط للبدء</span><span class="sub" id="bigS">وبعد الصوت قل: سورة الملك</span></button>
 <div id="st" aria-live="polite"></div>
 <pre id="dbg" style="margin:0 14px;font-size:.8rem;opacity:.75;direction:ltr;text-align:left;white-space:pre-wrap;max-height:9.5em;overflow:hidden"></pre>
@@ -27,6 +27,8 @@ const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== المصحف بالصوت: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
+const VER='v7';
+$('ver').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
 let rec=lsGet('rec','afasy'), surah=lsGet('surah',1), ayah=lsGet('ayah',1), gapListen=lsGet('gap',true);
@@ -35,7 +37,7 @@ const audio=new Audio(); audio.preload='auto'; let playing=false, token=0, start
 const pad=(n,l)=>String(n).padStart(l,'0');
 const AR_DIG='٠١٢٣٤٥٦٧٨٩';
 function norm(s){ return String(s||'').replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g,'').replace(/[ٱآأإ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/ء/g,'').replace(/[٠-٩]/g,d=>AR_DIG.indexOf(d)).replace(/[^0-9ا-ي ]/g,' ').replace(/\s+/g,' ').trim(); }
-function say(t){ return new Promise(res=>{ try{ if(!window.speechSynthesis){ res(); return; } speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(t); u.lang='ar-SA'; u.rate=0.95; const v=(speechSynthesis.getVoices()||[]).find(x=>/^ar/i.test(x.lang)); if(v) u.voice=v; u.onend=u.onerror=()=>res(); speechSynthesis.speak(u); setTimeout(res,12000); }catch(e){ res(); } }); }
+function say(t){ return new Promise(res=>{ try{ if(!window.speechSynthesis){ res(); return; } try{ if(speechSynthesis.speaking||speechSynthesis.pending) speechSynthesis.cancel(); }catch(e){} const u=new SpeechSynthesisUtterance(t); u.lang='ar-SA'; u.rate=0.95; const v=(speechSynthesis.getVoices()||[]).find(x=>/^ar/i.test(x.lang)); if(v) u.voice=v; let d=false; const fin=()=>{ if(d) return; d=true; dbg('say-end'); res(); }; u.onend=u.onerror=fin; dbg('say: '+t.slice(0,18)); speechSynthesis.speak(u); setTimeout(fin,Math.min(9000,1500+t.length*120)); }catch(e){ res(); } }); }
 function show(t,big){ $('st').textContent=t; if(big!=null) $('bigT').textContent=big; }
 const NN=NAMES.map(n=>norm(n).replace(/^ال/,'').replace(/ ال/g,' '));
 function findSurah(q){
@@ -78,7 +80,7 @@ async function playFrom(s,a){
     const n=COUNTS[surah-1];
     while(ayah<=n && my===token){
       show('سورة '+NAMES[surah-1]+' · آية '+ayah+' · '+REC[rec][0],'جارٍ التشغيل'); lsSet('ayah',ayah);
-      audio.src=urlFor(surah,ayah); prefetch(surah,ayah+1);
+      audio.src=urlFor(surah,ayah); prefetch(surah,ayah+1); dbg('play '+surah+':'+ayah);
       try{ await audio.play(); }catch(e){ playing=false; show('تعذر التشغيل، تأكد من الإنترنت'); return; }
       await waitEnd(); if(my!==token) return;
       ayah++;
@@ -152,18 +154,18 @@ async function handle(t,inGap){
   const p=parse(t); show('سمعتك: '+t);
   switch(p.c){
     case 'none': return '';
-    case 'stop': stopAudio(); $('bigT').textContent='اضغط للتحدث'; await say('تم الإيقاف'); return 'stop';
+    case 'stop': stopAudio(); $('bigT').textContent='اضغط للتحدث'; say('تم الإيقاف'); return 'stop';
     case 'help': stopAudio(); await say(HELP); return 'stop';
     case 'who': await say('القارئ '+rname()+'، وأنت في سورة '+NAMES[surah-1]); return '';
     case 'gap': gapListen=p.on; save(); await say(p.on?'سأسمع أوامرك بين الآيات':'لن أستمع بين الآيات'); return '';
-    case 'rec': rec=p.k; save(); prefetch(surah,isFull()?1:ayah); await say(rname()); playFrom(surah,isFull()?1:ayah); return 'stop';
-    case 'surah': { const changed=!!p.k&&p.k!==rec; if(p.k){ rec=p.k; save(); } surah=p.n; ayah=1; save(); prefetch(surah,1); await say('سورة '+NAMES[surah-1]+(changed?' بصوت '+rname():'')); playFrom(surah,1); return 'stop'; }
-    case 'nextS': if(surah<114){ prefetch(surah+1,1); await say(NAMES[surah]); playFrom(surah+1,1); } return 'stop';
-    case 'prevS': if(surah>1){ prefetch(surah-1,1); await say(NAMES[surah-2]); playFrom(surah-1,1); } return 'stop';
+    case 'rec': rec=p.k; save(); prefetch(surah,isFull()?1:ayah); show('القارئ: '+rname()); playFrom(surah,isFull()?1:ayah); return 'stop';
+    case 'surah': { const changed=!!p.k&&p.k!==rec; if(p.k){ rec=p.k; save(); } surah=p.n; ayah=1; save(); prefetch(surah,1); show('سورة '+NAMES[surah-1]+(changed?' · '+rname():'')); playFrom(surah,1); return 'stop'; }
+    case 'nextS': if(surah<114){ prefetch(surah+1,1); playFrom(surah+1,1); } return 'stop';
+    case 'prevS': if(surah>1){ prefetch(surah-1,1); playFrom(surah-1,1); } return 'stop';
     case 'next': if(isFull()){ if(surah<114) playFrom(surah+1,1); } else if(ayah<COUNTS[surah-1]) playFrom(surah,ayah+1); else if(surah<114) playFrom(surah+1,1); return 'stop';
     case 'prev': if(isFull()){ if(surah>1) playFrom(surah-1,1); } else if(ayah>1) playFrom(surah,ayah-1); else if(surah>1) playFrom(surah-1,1); return 'stop';
     case 'again': playFrom(surah,isFull()?1:Math.max(1,ayah-(inGap?1:0))); return 'stop';
-    case 'ayah': if(isFull()){ await say('هذا القارئ يقرأ السورة كاملة، اختر قارئًا آخر للانتقال إلى آية'); return ''; } if(p.n>=1&&p.n<=COUNTS[surah-1]){ prefetch(surah,p.n); await say(String(p.n)); playFrom(surah,p.n); return 'stop'; } await say('رقم الآية غير صحيح'); return '';
+    case 'ayah': if(isFull()){ await say('هذا القارئ يقرأ السورة كاملة، اختر قارئًا آخر للانتقال إلى آية'); return ''; } if(p.n>=1&&p.n<=COUNTS[surah-1]){ prefetch(surah,p.n); playFrom(surah,p.n); return 'stop'; } await say('رقم الآية غير صحيح'); return '';
     case 'play': playFrom(surah,ayah); return 'stop';
     default: if(!inGap) await say('ما فهمت. قل: مساعدة، لسماع الأوامر'); return '';
   }
