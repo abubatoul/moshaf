@@ -78,28 +78,32 @@ async function playFrom(s,a){
     if(my!==token) return; surah++; ayah=1; save(); if(surah>114){ playing=false; await say('انتهى المصحف'); return; }
   }
 }
-let recog=null, lastErr='', cur=null;
+let recog=null, lastErr='', cur=null, active=false, endWaiters=[];
 function dbg(m){ try{ const d=$('dbg'); const t=new Date(); d.textContent=(m+' · '+t.getMinutes()+':'+t.getSeconds()+'\n'+d.textContent).split('\n').slice(0,9).join('\n'); }catch(e){} }
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function waitInactive(ms){ return new Promise(res=>{ if(!active){ res(); return; } const t=setTimeout(()=>{ active=false; res(); },ms); endWaiters.push(()=>{ clearTimeout(t); res(); }); }); }
 function getRecog(){
   if(recog) return recog;
   recog=new SR(); recog.lang='ar-SA'; recog.interimResults=true; recog.maxAlternatives=1; recog.continuous=false;
-  recog.onstart=()=>dbg('start'); recog.onaudiostart=()=>dbg('audio'); recog.onsoundstart=()=>dbg('sound'); recog.onspeechstart=()=>dbg('speech');
+  recog.onstart=()=>{ active=true; dbg('start'); }; recog.onaudiostart=()=>dbg('audio'); recog.onsoundstart=()=>dbg('sound'); recog.onspeechstart=()=>dbg('speech');
   recog.onresult=e=>{ if(!cur) return; try{ const r=e.results[e.results.length-1]; cur.got=r[0].transcript; dbg('result: '+cur.got); if(r.isFinal) cur.fin(); }catch(_){} };
-  recog.onerror=e=>{ dbg('error: '+(e&&e.error)); if(cur){ cur.err=(e&&e.error)||'error'; cur.fin(); } };
-  recog.onend=()=>{ dbg('end'); if(cur) cur.fin(); };
+  recog.onerror=e=>{ dbg('error: '+(e&&e.error)); if(cur&&e&&e.error!=='aborted'){ cur.err=e.error||'error'; cur.fin(); } };
+  recog.onend=()=>{ active=false; dbg('end'); const w=endWaiters; endWaiters=[]; w.forEach(f=>f()); if(cur) cur.fin(); };
   return recog;
 }
-function listenOnce(ms,quiet){
+async function listenOnce(ms,quiet){
+  lastErr='';
+  if(!SR){ lastErr='unsupported'; return ''; }
+  const r=getRecog();
+  if(cur){ const old=cur; old.got=''; old.fin(); }
+  if(active){ try{ r.abort(); }catch(e){} await waitInactive(900); }
   return new Promise(res=>{
-    lastErr='';
-    if(!SR){ lastErr='unsupported'; res(''); return; }
-    try{
-      const r=getRecog(); if(cur){ try{ r.abort(); }catch(e){} cur=null; }
-      let done=false; const me={got:'',err:'',fin:()=>{ if(done) return; done=true; clearTimeout(tm); if(cur===me) cur=null; try{ r.abort(); }catch(e){} $('big').classList.remove('listen'); lastErr=me.err; res(me.got); }};
-      const tm=setTimeout(()=>me.fin(),ms||6000); cur=me;
-      $('big').classList.add('listen'); if(!quiet) $('bigT').textContent='أسمعك…';
-      setTimeout(()=>{ try{ r.start(); }catch(e){ me.err='start:'+(e&&e.message||e); dbg(me.err); me.fin(); } },quiet?0:0);
-    }catch(e){ lastErr='start:'+(e&&e.message||e); dbg(lastErr); res(''); }
+    let done=false, tm=null;
+    const me={got:'',err:'',fin:()=>{ if(done) return; done=true; clearTimeout(tm); if(cur===me) cur=null; try{ r.abort(); }catch(e){} $('big').classList.remove('listen'); lastErr=me.err; res(me.got); }};
+    cur=me; tm=setTimeout(()=>me.fin(),ms||6000);
+    $('big').classList.add('listen'); if(!quiet) $('bigT').textContent='أسمعك…';
+    const go=(n)=>{ try{ r.start(); }catch(e){ if(n<2){ dbg('retry start'); setTimeout(()=>go(n+1),450); } else { me.err='start:'+(e&&e.message||e); dbg(me.err); me.fin(); } } };
+    go(0);
   });
 }
 function errMsg(){
