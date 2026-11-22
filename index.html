@@ -144,6 +144,7 @@ header .hb{flex:none;font:inherit;font-size:.85rem;border:1px solid var(--line);
 #instZoom{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center}
 #instZoom[hidden]{display:none}
 #instZoom img{max-width:92vw;max-height:92vh;border-radius:12px}
+#instSheet ol.msg{list-style:none;padding:0;text-align:center;font-size:1.15rem;font-weight:700;line-height:1.8;margin:.4rem 0 1rem}
 #instSheet .ar{text-align:center;font-size:2rem;animation:bnc 1s infinite}
 @keyframes bnc{50%{transform:translateY(8px)}}
 #instSheet button{font:inherit;width:100%;height:2.6rem;border-radius:10px;border:0;background:var(--accent);color:var(--accent-fg);cursor:pointer}
@@ -815,12 +816,13 @@ addEventListener('scroll',()=>{ if(!$('vpop').hidden) hideVp(); },{passive:true}
 function setNote(msg){ const n=$('setNote'); n.textContent=msg; n.hidden=!msg; }
 $('instBtn').addEventListener('click',()=>{
   const standalone=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone;
-  if (standalone){ setNote('المصحف مثبّت ومفتوح من الشاشة الرئيسية ✓'); return; }
+  if (standalone){ showMsg('✓ المصحف مثبّت','المصحف مثبّت ومفتوح من الشاشة الرئيسية'); return; }
   if (deferredInstall){ const d=deferredInstall; deferredInstall=null; setPanel.hidden=true; d.prompt(); return; } // تثبيت مباشر بضغطة واحدة
   const ua=navigator.userAgent||'', ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   const steps=ios
     ? ['افتح هذه الصفحة في متصفح <b>Safari</b> (وليس من داخل الواتساب).','اضغط زر المشاركة <b>⬆</b> في أسفل الشاشة.','اختر <b>«إضافة إلى الشاشة الرئيسية»</b> ثم <b>«إضافة»</b>.']
     : ['افتح هذه الصفحة في متصفح <b>Chrome</b> (وليس من داخل الواتساب).','اضغط القائمة <b>⋮</b> أعلى المتصفح.','اختر <b>«تثبيت التطبيق»</b> أو <b>«إضافة إلى الشاشة الرئيسية»</b> ثم <b>«تثبيت»</b>.'];
+  $('instSteps').classList.remove('msg'); $('instOk').textContent='حسنًا';
   $('instTitle').textContent='تثبيت المصحف على الشاشة الرئيسية';
   $('instSteps').innerHTML=steps.map(s=>'<li>'+s+'</li>').join('');
   $('instArrow').hidden=!ios; instImgsShow(ios);
@@ -845,9 +847,14 @@ $('verNote').textContent='الإصدار ١٫٠٤ · ١٧/١١/٢٠٢٦ · مو�
 $('instOk').addEventListener('click',()=>{ $('instSheet').hidden=true; if(instAfter){ const f=instAfter; instAfter=null; f(); } });
 $('instSheet').addEventListener('click',e=>{ if(e.target===$('instSheet')){ $('instSheet').hidden=true; instAfter=null; } });
 function showSheet(title,steps,okText,after){
+  $('instSteps').classList.remove('msg');
   instImgsShow(false);
   $('instTitle').textContent=title; $('instSteps').innerHTML=steps.map(s=>'<li>'+s+'</li>').join('');
   $('instArrow').hidden=true; $('instOk').textContent=okText||'حسنًا'; instAfter=after||null; $('instSheet').hidden=false;
+}
+function showMsg(title,msg){
+  instImgsShow(false); $('instTitle').textContent=title; $('instSteps').innerHTML='<li>'+msg+'</li>'; $('instSteps').classList.add('msg');
+  $('instArrow').hidden=true; $('instOk').textContent='حسنًا'; instAfter=null; setPanel.hidden=true; $('instSheet').hidden=false;
 }
 function micHelp(kind){
   const app=LOCAL_Q;
