@@ -19,6 +19,7 @@ body{display:flex;flex-direction:column}
 <div id="top" role="status">المصحف بالصوت · نسخة تجريبية</div>
 <button id="big" type="button" aria-label="زر رئيسي. اضغط للتحدث بأمر صوتي"><span id="bigT">اضغط للبدء</span><span class="sub" id="bigS">وبعد الصوت قل: سورة الملك</span></button>
 <div id="st" aria-live="polite"></div>
+<pre id="dbg" style="margin:0 14px;font-size:.8rem;opacity:.75;direction:ltr;text-align:left;white-space:pre-wrap;max-height:9.5em;overflow:hidden"></pre>
 <div id="row"><button id="bHelp" type="button">الأوامر</button><button id="bStop" type="button">إيقاف</button></div>
 <script>
 const NAMES=["الفاتحة","البقرة","آل عمران","النساء","المائدة","الأنعام","الأعراف","الأنفال","التوبة","يونس","هود","يوسف","الرعد","ابراهيم","الحجر","النحل","الإسراء","الكهف","مريم","طه","الأنبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم","لقمان","السجدة","الأحزاب","سبإ","فاطر","يس","الصافات","ص","الزمر","غافر","فصلت","الشورى","الزخرف","الدخان","الجاثية","الأحقاف","محمد","الفتح","الحجرات","ق","الذاريات","الطور","النجم","القمر","الرحمن","الواقعة","الحديد","المجادلة","الحشر","الممتحنة","الصف","الجمعة","المنافقون","التغابن","الطلاق","التحريم","الملك","القلم","الحاقة","المعارج","نوح","الجن","المزمل","المدثر","القيامة","الانسان","المرسلات","النبإ","النازعات","عبس","التكوير","الإنفطار","المطففين","الإنشقاق","البروج","الطارق","الأعلى","الغاشية","الفجر","البلد","الشمس","الليل","الضحى","الشرح","التين","العلق","القدر","البينة","الزلزلة","العاديات","القارعة","التكاثر","العصر","الهمزة","الفيل","قريش","الماعون","الكوثر","الكافرون","النصر","المسد","الإخلاص","الفلق","الناس"];
@@ -77,19 +78,28 @@ async function playFrom(s,a){
     if(my!==token) return; surah++; ayah=1; save(); if(surah>114){ playing=false; await say('انتهى المصحف'); return; }
   }
 }
-let recog=null, lastErr='';
+let recog=null, lastErr='', cur=null;
+function dbg(m){ try{ const d=$('dbg'); const t=new Date(); d.textContent=(m+' · '+t.getMinutes()+':'+t.getSeconds()+'\n'+d.textContent).split('\n').slice(0,9).join('\n'); }catch(e){} }
+function getRecog(){
+  if(recog) return recog;
+  recog=new SR(); recog.lang='ar-SA'; recog.interimResults=true; recog.maxAlternatives=1; recog.continuous=false;
+  recog.onstart=()=>dbg('start'); recog.onaudiostart=()=>dbg('audio'); recog.onsoundstart=()=>dbg('sound'); recog.onspeechstart=()=>dbg('speech');
+  recog.onresult=e=>{ if(!cur) return; try{ const r=e.results[e.results.length-1]; cur.got=r[0].transcript; dbg('result: '+cur.got); if(r.isFinal) cur.fin(); }catch(_){} };
+  recog.onerror=e=>{ dbg('error: '+(e&&e.error)); if(cur){ cur.err=(e&&e.error)||'error'; cur.fin(); } };
+  recog.onend=()=>{ dbg('end'); if(cur) cur.fin(); };
+  return recog;
+}
 function listenOnce(ms,quiet){
   return new Promise(res=>{
     lastErr='';
     if(!SR){ lastErr='unsupported'; res(''); return; }
-    let done=false, got='';
-    try{ recog=new SR(); recog.lang='ar-SA'; recog.interimResults=true; recog.maxAlternatives=1; recog.continuous=false;
-      const fin=()=>{ if(done) return; done=true; try{ recog.stop(); }catch(e){} $('big').classList.remove('listen'); res(got); };
-      recog.onresult=e=>{ try{ const r=e.results[e.results.length-1]; got=r[0].transcript; if(r.isFinal) fin(); }catch(_){} };
-      recog.onerror=e=>{ lastErr=(e&&e.error)||'error'; fin(); }; recog.onend=()=>fin();
+    try{
+      const r=getRecog(); if(cur){ try{ r.abort(); }catch(e){} cur=null; }
+      let done=false; const me={got:'',err:'',fin:()=>{ if(done) return; done=true; clearTimeout(tm); if(cur===me) cur=null; try{ r.abort(); }catch(e){} $('big').classList.remove('listen'); lastErr=me.err; res(me.got); }};
+      const tm=setTimeout(()=>me.fin(),ms||6000); cur=me;
       $('big').classList.add('listen'); if(!quiet) $('bigT').textContent='أسمعك…';
-      recog.start(); setTimeout(fin,ms||6000);
-    }catch(e){ lastErr='start:'+(e&&e.message||e); res(''); }
+      setTimeout(()=>{ try{ r.start(); }catch(e){ me.err='start:'+(e&&e.message||e); dbg(me.err); me.fin(); } },quiet?0:0);
+    }catch(e){ lastErr='start:'+(e&&e.message||e); dbg(lastErr); res(''); }
   });
 }
 function errMsg(){
