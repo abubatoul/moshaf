@@ -17,7 +17,7 @@ body{display:flex;flex-direction:column}
 #row button{flex:1;height:3.4rem;border-radius:16px;border:0;background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:1.1rem;font-weight:700}
 </style></head><body>
 <div id="top" role="status">المصحف بالصوت · نسخة تجريبية</div>
-<button id="big" type="button" aria-label="زر رئيسي. اضغط للتحدث بأمر صوتي"><span id="bigT">اضغط للبدء</span><span class="sub" id="bigS">ثم قل: سورة الملك</span></button>
+<button id="big" type="button" aria-label="زر رئيسي. اضغط للتحدث بأمر صوتي"><span id="bigT">اضغط للبدء</span><span class="sub" id="bigS">وبعد الصوت قل: سورة الملك</span></button>
 <div id="st" aria-live="polite"></div>
 <div id="row"><button id="bHelp" type="button">الأوامر</button><button id="bStop" type="button">إيقاف</button></div>
 <script>
@@ -77,19 +77,27 @@ async function playFrom(s,a){
     if(my!==token) return; surah++; ayah=1; save(); if(surah>114){ playing=false; await say('انتهى المصحف'); return; }
   }
 }
-let recog=null;
+let recog=null, lastErr='';
 function listenOnce(ms,quiet){
   return new Promise(res=>{
-    if(!SR){ res(''); return; }
+    lastErr='';
+    if(!SR){ lastErr='unsupported'; res(''); return; }
     let done=false, got='';
-    try{ recog=new SR(); recog.lang='ar-SA'; recog.interimResults=false; recog.maxAlternatives=3; recog.continuous=false;
+    try{ recog=new SR(); recog.lang='ar-SA'; recog.interimResults=true; recog.maxAlternatives=1; recog.continuous=false;
       const fin=()=>{ if(done) return; done=true; try{ recog.stop(); }catch(e){} $('big').classList.remove('listen'); res(got); };
-      recog.onresult=e=>{ try{ got=e.results[0][0].transcript; }catch(_){} fin(); };
-      recog.onerror=()=>fin(); recog.onend=()=>fin();
+      recog.onresult=e=>{ try{ const r=e.results[e.results.length-1]; got=r[0].transcript; if(r.isFinal) fin(); }catch(_){} };
+      recog.onerror=e=>{ lastErr=(e&&e.error)||'error'; fin(); }; recog.onend=()=>fin();
       $('big').classList.add('listen'); if(!quiet) $('bigT').textContent='أسمعك…';
       recog.start(); setTimeout(fin,ms||6000);
-    }catch(e){ res(''); }
+    }catch(e){ lastErr='start:'+(e&&e.message||e); res(''); }
   });
+}
+function errMsg(){
+  if(lastErr==='not-allowed') return 'الميكروفون غير مسموح. افتح الإعدادات، ثم سفاري، ثم الميكروفون، واختر سماح.';
+  if(lastErr==='service-not-allowed') return 'فعّل الإملاء الصوتي: الإعدادات، عام، لوحة المفاتيح، تفعيل الإملاء.';
+  if(lastErr==='unsupported') return 'هذا المتصفح لا يدعم التعرف على الكلام. استخدم سفاري على آيفون.';
+  if(lastErr&&lastErr!=='no-speech'&&lastErr!=='aborted') return 'تعذر الاستماع. الخطأ: '+lastErr;
+  return '';
 }
 const HELP='الأوامر: قل: سورة الملك. أو: القارئ العفاسي. أو: شغّل، أوقف، التالي، السابق، أعد، آية ثلاثين، سورة تالية. وللتحدث مرة ثانية اضغط الزر الكبير.';
 function parse(t){
@@ -133,16 +141,15 @@ async function handle(t,inGap){
   }
 }
 async function session(){
-  stopAudio(); const t=await listenOnce(7000,false); $('bigT').textContent='اضغط للتحدث';
-  if(!t){ show('ما سمعت شيئًا، اضغط الزر وقل أمرك'); await say('ما سمعت شيئًا'); return; }
+  stopAudio(); try{ speechSynthesis.cancel(); }catch(e){}
+  const t=await listenOnce(8000,false); $('bigT').textContent='اضغط للتحدث';
+  if(!t){ const m=errMsg(); show(m||'ما سمعت شيئًا. اضغط الزر وقل أمرك مباشرة، مثل: سورة الملك'); await say(m||'ما سمعت شيئًا'); return; }
   await handle(t,false);
 }
 const SILENT="data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YUAGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
-$('big').addEventListener('click',async()=>{
-  if(!started){ started=true; try{ audio.src=SILENT; await audio.play(); }catch(e){}
-    if(!SR){ show('هذا المتصفح لا يدعم التعرف على الكلام. استخدم Safari على آيفون.'); await say('هذا المتصفح لا يدعم التعرف على الكلام'); return; }
-    await say('المصحف بالصوت. قل مثلاً: سورة الملك، أو: القارئ العفاسي. وللمساعدة قل: مساعدة.'); }
-  await session();
+$('big').addEventListener('click',()=>{
+  if(!started){ started=true; try{ audio.src=SILENT; const pr=audio.play(); if(pr&&pr.catch) pr.catch(()=>{}); }catch(e){} }
+  session();
 });
 $('bStop').addEventListener('click',()=>{ stopAudio(); try{ speechSynthesis.cancel(); }catch(e){} show('تم الإيقاف','اضغط للتحدث'); });
 $('bHelp').addEventListener('click',async()=>{ stopAudio(); show(HELP); await say(HELP); });
