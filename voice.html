@@ -45,7 +45,7 @@ const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== قرآنك الصوتي: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
-const VER='1.43';
+const VER='1.44';
 $('ver').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
@@ -247,7 +247,7 @@ function errMsg(){
 }
 const HELP='قل: سورة الملك، أو القارئ العفاسي. وللتحكم قل: أوقف، التالي، السابق، أعد، آية ثلاثين. ولإيقاف الاستماع بين الآيات قل: بدون فاصلة. وللتحدث مرة أخرى، اضغط الزر الكبير.';
 function parse(t){
-  if(/^[\s،,]+$/.test(String(t||'')) && /[،,]/.test(String(t))) return {c:'gap',on:null}; // الإملاء يكتب «فاصلة» على شكل ،
+  { const T0=String(t||'').replace(/[\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff\u00a0]/g,''); if(/^[\s،,٬‚﹐，､]+$/.test(T0) && /[،,٬‚﹐，､]/.test(T0)) return {c:'gap',on:null}; } // الإملاء يكتب «فاصلة» على شكل ،
   const q=norm(t); if(!q) return {c:'none'};
   const W=q.split(' '), has=(...a)=>a.some(x=>W.includes(x)), short=W.length<=4, hasS=W.includes('سوره');
   if(/(تلقين|ترديد|ردد|اقرا ورا|اقرا وراك)/.test(q)){ const off=/(بدون|الغ|ايقاف|اوقف|وقف|قف|انها|لا )/.test(q), on=/(ردد|اقرا ورا|فعل|شغل|ابدا|وضع)/.test(q); return {c:'talq',on:off?false:(on?true:null)}; }
@@ -284,7 +284,7 @@ async function handle(t,inGap){
   if(inGap){ const q0=norm(t); if(p.c==='surah' && !q0.split(' ').includes('سوره')) return ''; if(p.c==='rec' && !/(القاري|قاري|بصوت|الشيخ)/.test(q0)) return ''; }
   show('سمعتك: '+t);
   switch(p.c){
-    case 'none': return '';
+    case 'none': if(t&&!/[ء-ي0-9٠-٩a-zA-Z]/.test(t)) show('سمعتك: '+t+' ['+Array.from(String(t)).map(c=>c.codePointAt(0).toString(16)).join(' ')+']'); return '';
     case 'stop': stopAudio(); $('bigT').textContent='اضغط للتحدث'; say('تم الإيقاف.'); return 'stop';
     case 'help': stopAudio(); await say(HELP); return 'stop';
     case 'who': await say('القارئ '+rname()+'، وأنت في سورة '+NAMES[surah-1]); return '';
