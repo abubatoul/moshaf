@@ -25,8 +25,11 @@ body{display:flex;flex-direction:column}
 #st{margin:0 14px;padding:12px 14px;font-size:1.2rem;min-height:3.2em;border-radius:16px;background:rgba(255,255,255,.08)}
 #row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 14px calc(40px + env(safe-area-inset-bottom))}
 #row button{height:3.4rem;border-radius:16px;border:0;background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:1.1rem;font-weight:700}
+#ay{display:none;margin:6px 14px 0;padding:10px 14px;border-radius:16px;background:rgba(255,255,255,.08);text-align:center;direction:rtl;font-family:"Geeza Pro","Damascus","Noto Naskh Arabic",serif;line-height:2.1;max-height:30vh;overflow-y:auto;color:#fff;-webkit-overflow-scrolling:touch}
+#ay span.ok{color:#7fe3cf}
 </style></head><body style="min-height:100vh">
 <div id="top" role="banner"><div class="ttl" role="heading" aria-level="1" aria-label="قرآنك الصوتي"><span aria-hidden="true">ﻗﺮآ</span><svg class="nn" viewBox="19 -470 440 810" aria-hidden="true"><path d="M60,-41 V170 Q60,260 160,260 H300 Q400,260 400,170 V-260" fill="none" stroke="#f1d98b" stroke-width="82" stroke-linejoin="round"/><circle cx="400" cy="-385" r="42" fill="#f1d98b"/></svg><i class="ks" aria-hidden="true"></i><i class="gp" aria-hidden="true"></i><i class="ks k2" aria-hidden="true"></i><span class="kk" aria-hidden="true">ﻚ</span><span class="sp" aria-hidden="true"></span><span aria-hidden="true">اﻟﺼﻮﺗﻲ</span></div><div class="sdq" aria-label="صدقة جارية عني وعن والدي">ﺻﺪﻗﺔ ﺟﺎرﻳﺔ ﻋﻨﻲ وﻋﻦ واﻟﺪي</div><div class="vv">نسخة تجريبية · <b id="ver"></b></div></div>
+<div id="ay" aria-hidden="true"></div>
 <button id="big" type="button" aria-label="زر رئيسي. اضغط للتحدث بأمر صوتي"><span id="bigT">اضغط للبدء</span><span class="sub" id="bigS">وبعد الصوت قل: سورة الملك</span></button>
 <div id="st" aria-live="polite"></div>
 <pre id="dbg" style="display:none;margin:0 14px;font-size:.8rem;opacity:.75;direction:ltr;text-align:left;white-space:pre-wrap;max-height:9.5em;overflow:hidden"></pre>
@@ -37,7 +40,7 @@ const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== قرآنك الصوتي: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
-const VER='1.24';
+const VER='1.25';
 $('ver').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
@@ -91,18 +94,18 @@ async function playFrom(s,a){
   stopAudio(); const my=token; surah=s; ayah=a||1; save(); playing=true;
   if(isFull()){
     if((REC[rec][3]||[]).includes(s)){ playing=false; await say('سورة '+NAMES[s-1]+' غير متوفرة عند هذا القارئ'); return; }
-    show('سورة '+NAMES[s-1]+' · '+REC[rec][0],'جارٍ التشغيل'); audio.src=urlFor(s,1);
+    show('سورة '+NAMES[s-1]+' · '+REC[rec][0],'جارٍ التشغيل'); renderAy(0,0); audio.src=urlFor(s,1);
     try{ await audio.play(); }catch(e){ playing=false; show('تعذر التشغيل، تأكد من الإنترنت'); return; }
     await waitEnd(); if(my!==token) return; playing=false;
     if(s<114) playFrom(s+1,1); return;
   }
   while(playing && my===token && surah<=114){
     const n=COUNTS[surah-1];
-    if(talq) await loadQ();
+    if(talq) await loadQ(); else loadQ();
     let tries=0, lastA=0;
     while(ayah<=n && my===token){
       if(lastA!==ayah){ tries=0; lastA=ayah; }
-      show('سورة '+NAMES[surah-1]+' · آية '+ayah+' · '+REC[rec][0],'جارٍ التشغيل'); lsSet('ayah',ayah);
+      show('سورة '+NAMES[surah-1]+' · آية '+ayah+' · '+REC[rec][0],'جارٍ التشغيل'); lsSet('ayah',ayah); renderAy(surah,ayah);
       let plan=null; const E=talq&&QN[surah]&&QN[surah][ayah];
       if(E && E.split(' ').length>12){ show('تجهيز الآية الطويلة','جارٍ التحضير'); plan=await chunkPlan(surah,ayah); if(my!==token) return; }
       if(!plan){
@@ -117,10 +120,10 @@ async function playFrom(s,a){
           const dur=plan?(plan.cuts[k+1]-plan.cuts[k]):((isFinite(audio.duration)&&audio.duration)||4);
           win=Math.min(40000,Math.max(5000,dur*1000*1.8+3000));
           show('دورك: رددها','دورك'); const tt=await listenOnce(win,true); $('bigT').textContent='جارٍ التشغيل'; if(my!==token) return;
-          if(tt){ const q=norm(tt); const W=q.split(' '); if(W.length<=2){ const p=parse(tt); if(['stop','again','next','prev','help','talq'].includes(p.c)){ isCmd=true; const r=await handle(tt,true); if(r==='stop'||my!==token) return; break; } } heard+=(heard?' ':'')+tt; }
+          if(tt){ const q=norm(tt); const W=q.split(' '); if(W.length<=2){ const p=parse(tt); if(['stop','again','next','prev','help','talq'].includes(p.c)){ isCmd=true; const r=await handle(tt,true); if(r==='stop'||my!==token) return; break; } } heard+=(heard?' ':'')+tt; markHeard(vNorm(heard)); }
         }
         if(!isCmd && E && heard && !plan){ const t0=Date.now(); const nw=E.split(' ').length; let more=0;
-          while(qScore(E,vNorm(heard))<0.75 && more<4 && Date.now()-t0<win && my===token){ more++; const t2=await listenOnce(Math.min(6000,nw>12?6000:4000),true); if(my!==token) return; if(!t2) break; heard+=' '+t2; } }
+          while(qScore(E,vNorm(heard))<0.75 && more<4 && Date.now()-t0<win && my===token){ more++; const t2=await listenOnce(Math.min(6000,nw>12?6000:4000),true); if(my!==token) return; if(!t2) break; heard+=' '+t2; markHeard(vNorm(heard)); } }
         if(!isCmd && E){ const need=E.split(' ').length>25?0.4:0.5; const sc=heard?qScore(E,vNorm(heard)):0; dbg('score '+sc.toFixed(2)); if(sc<need && tries<2){ tries++; show('لم تصح القراءة، أعيد الآية','أعد الآية'); await beep(); await beep(); continue; } }
       }
       ayah++;
@@ -161,7 +164,11 @@ function wEq(a,b){
 }
 
 const QN={}; let qLoading=null;
-function loadQ(){ if(qLoading) return qLoading; qLoading=fetch('quran.json').then(r=>r.json()).then(d=>{ for(const k in d) for(const [sn,an,tx] of d[k]){ let nt=vNorm(tx); if(an===1&&sn!==1&&nt.indexOf('بسم الله الرحمن الرحيم ')===0) nt=nt.slice(23); (QN[sn]=QN[sn]||{})[an]=nt; } }).catch(()=>{ qLoading=null; }); return qLoading; }
+function loadQ(){ if(qLoading) return qLoading; qLoading=fetch('quran.json').then(r=>r.json()).then(d=>{ for(const k in d) for(const [sn,an,tx] of d[k]){ let nt=vNorm(tx); if(an===1&&sn!==1&&nt.indexOf('بسم الله الرحمن الرحيم ')===0) nt=nt.slice(23); (QN[sn]=QN[sn]||{})[an]=nt; buildQT(sn,an,tx); } if(playing&&curAy) renderAy(curAy[0],curAy[1]); }).catch(()=>{ qLoading=null; }); return qLoading; }
+const QT={}; let curAy=null;
+function buildQT(sn,an,tx){ let toks=[]; for(const p of tx.split(' ')){ if(!p) continue; const w=vNorm(p); if(w) toks.push({t:p,w:w.split(' ')}); else if(toks.length) toks[toks.length-1].t+=' '+p; } if(an===1&&sn!==1&&toks.length>4&&toks.slice(0,4).map(x=>x.w.join(' ')).join(' ')==='بسم الله الرحمن الرحيم') toks=toks.slice(4); (QT[sn]=QT[sn]||{})[an]=toks; }
+function renderAy(s,a){ const el=$('ay'); curAy=s?[s,a]:null; const T=s&&QT[s]&&QT[s][a]; if(!T){ el.style.display='none'; return; } const n=T.length; el.style.fontSize=(n<=12?2.1:n<=25?1.7:n<=45?1.4:1.2)+'rem'; el.innerHTML=''; T.forEach(x=>{ const sp=document.createElement('span'); sp.textContent=x.t+' '; el.appendChild(sp); }); el.style.display='block'; el.scrollTop=0; }
+function markHeard(hn){ if(!curAy) return; const T=QT[curAy[0]]&&QT[curAy[0]][curAy[1]]; if(!T) return; const el=$('ay'), sp=el.children, G=hn.split(' ').filter(Boolean), used=new Set(); let last=null; T.forEach((x,i)=>{ for(let j=0;j<G.length;j++){ if(!used.has(j)&&wEq(x.w[0],G[j])){ used.add(j); if(sp[i]){ sp[i].className='ok'; last=sp[i]; } break; } } }); if(last) el.scrollTop=Math.max(0,last.offsetTop-el.clientHeight/2); }
 function qScore(exp,got){ const E=exp.split(' ').filter(Boolean), G=got.split(' ').filter(Boolean); if(!E.length) return 1; const used=new Set(); let hit=0; for(const e of E){ for(let i=0;i<G.length;i++){ if(!used.has(i)&&wEq(e,G[i])){ used.add(i); hit++; break; } } } return hit/E.length; }
 const planCache=new Map();
 async function chunkPlan(sn,an){
