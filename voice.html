@@ -31,7 +31,7 @@ const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== المصحف الصوتي: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
-const VER='1.03';
+const VER='1.07';
 $('ver').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
@@ -92,15 +92,30 @@ async function playFrom(s,a){
   }
   while(playing && my===token && surah<=114){
     const n=COUNTS[surah-1];
+    if(talq) await loadQ();
+    let tries=0, lastA=0;
     while(ayah<=n && my===token){
+      if(lastA!==ayah){ tries=0; lastA=ayah; }
       show('سورة '+NAMES[surah-1]+' · آية '+ayah+' · '+REC[rec][0],'جارٍ التشغيل'); lsSet('ayah',ayah);
-      audio.src=urlFor(surah,ayah); prefetch(surah,ayah+1); dbg('play '+surah+':'+ayah);
-      try{ await audio.play(); }catch(e){ playing=false; show('تعذر التشغيل، تأكد من الإنترنت'); return; }
-      await waitEnd(); if(my!==token) return;
+      let plan=null; const E=talq&&QN[surah]&&QN[surah][ayah];
+      if(E && E.split(' ').length>12){ show('تجهيز الآية الطويلة','جارٍ التحضير'); plan=await chunkPlan(surah,ayah); if(my!==token) return; }
+      if(!plan){
+        audio.src=urlFor(surah,ayah); prefetch(surah,ayah+1); dbg('play '+surah+':'+ayah);
+        try{ await audio.play(); }catch(e){ playing=false; show('تعذر التشغيل، تأكد من الإنترنت'); return; }
+        await waitEnd(); if(my!==token) return;
+      } else dbg('chunks '+(plan.cuts.length-1));
       if(talq){
-        const exp=((isFinite(audio.duration)&&audio.duration)||4)*1000, win=Math.min(40000,Math.max(5000,exp*1.8+3000));
-        show('دورك: رددها','دورك'); const tt=await listenOnce(win,true); $('bigT').textContent='جارٍ التشغيل'; if(my!==token) return;
-        if(tt){ const q=norm(tt); const W=q.split(' '); if(W.length<=2){ const p=parse(tt); if(['stop','again','next','prev','help','talq'].includes(p.c)){ const r=await handle(tt,true); if(r==='stop'||my!==token) return; } } }
+        const segs=plan?plan.cuts.length-1:1; let heard='', isCmd=false, win=5000;
+        for(let k=0;k<segs&&my===token;k++){
+          if(plan){ show('سورة '+NAMES[surah-1]+' · آية '+ayah+' · جزء '+(k+1)+' من '+segs,'جارٍ التشغيل'); await playSeg(plan,k); if(my!==token) return; }
+          const dur=plan?(plan.cuts[k+1]-plan.cuts[k]):((isFinite(audio.duration)&&audio.duration)||4);
+          win=Math.min(40000,Math.max(5000,dur*1000*1.8+3000));
+          show('دورك: رددها','دورك'); const tt=await listenOnce(win,true); $('bigT').textContent='جارٍ التشغيل'; if(my!==token) return;
+          if(tt){ const q=norm(tt); const W=q.split(' '); if(W.length<=2){ const p=parse(tt); if(['stop','again','next','prev','help','talq'].includes(p.c)){ isCmd=true; const r=await handle(tt,true); if(r==='stop'||my!==token) return; break; } } heard+=(heard?' ':'')+tt; }
+        }
+        if(!isCmd && E && heard && !plan){ const t0=Date.now(); const nw=E.split(' ').length; let more=0;
+          while(qScore(E,vNorm(heard))<0.75 && more<4 && Date.now()-t0<win && my===token){ more++; const t2=await listenOnce(Math.min(6000,nw>12?6000:4000),true); if(my!==token) return; if(!t2) break; heard+=' '+t2; } }
+        if(!isCmd && E){ const need=E.split(' ').length>25?0.4:0.5; const sc=heard?qScore(E,vNorm(heard)):0; dbg('score '+sc.toFixed(2)); if(sc<need && tries<2){ tries++; show('لم تصح القراءة، أعيد الآية','أعد الآية'); await beep(); await beep(); continue; } }
       }
       ayah++;
       if(!talq && gapListen && ayah<=n){ const t=await listenOnce(3500,true); if(my!==token) return; if(t){ const r=await handle(t,true); if(r==='stop'||my!==token) return; } }
@@ -112,6 +127,66 @@ let recog=null, lastErr='', cur=null, active=false, endWaiters=[];
 function dbg(m){ try{ const d=$('dbg'); const t=new Date(); d.textContent=(m+' · '+t.getMinutes()+':'+t.getSeconds()+'\n'+d.textContent).split('\n').slice(0,9).join('\n'); }catch(e){} }
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 let actx=null;
+function vNorm(s){
+  return s.replace(/[ؐ-ًؚ-ٰٟۖ-ۭـ]/g,'').replace(/[ٱآأإ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/ؤ/g,'و').replace(/ئ/g,'ي').replace(/ء/g,'').replace(/[^ء-ي ]/g,' ').replace(/\s+/g,' ').trim();
+}
+function lev1(a,b){ // هل المسافة بينهما ≤ 1
+  if (a===b) return true; const la=a.length, lb=b.length; if (Math.abs(la-lb)>1) return false;
+  let i=0; while(i<la&&i<lb&&a[i]===b[i]) i++;
+  if (la===lb) return a.slice(i+1)===b.slice(i+1);
+  return la>lb ? a.slice(i+1)===b.slice(i) : b.slice(i+1)===a.slice(i);
+}
+function lev2(a,b){ // مسافة تحرير ≤ 2 للكلمات الطويلة
+  const la=a.length, lb=b.length; let prev=[],cur=[];
+  for (let j=0;j<=lb;j++) prev[j]=j;
+  for (let i=1;i<=la;i++){ cur[0]=i; let mn=i;
+    for (let j=1;j<=lb;j++){ cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1)); if(cur[j]<mn) mn=cur[j]; }
+    if (mn>2) return false; [prev,cur]=[cur,prev]; }
+  return prev[lb]<=2;
+}
+function wEq(a,b){
+  if (a===b) return true;
+  if (a.length>=2 && b.length>=2 && (a===b+'ا' || b===a+'ا')) return true; // عما = عم
+  if (a.length>=4 && b.length>=4 && (a===b+'ن' || b===a+'ن')) return true; // التنوين منطوقًا نونًا
+  if (a.length>=4 && b.length>=4 && lev1(a,b)) return true;
+  if (a.length>=4 && b.length>=4 && (a.slice(1)===b || b.slice(1)===a)) return true; // «و» أو «ف» ملصقة
+  if (a.length>=7 && b.length>=7 && Math.abs(a.length-b.length)<=2) return lev2(a,b);
+  return false;
+}
+
+const QN={}; let qLoading=null;
+function loadQ(){ if(qLoading) return qLoading; qLoading=fetch('quran.json').then(r=>r.json()).then(d=>{ for(const k in d) for(const [sn,an,tx] of d[k]){ let nt=vNorm(tx); if(an===1&&sn!==1&&nt.indexOf('بسم الله الرحمن الرحيم ')===0) nt=nt.slice(23); (QN[sn]=QN[sn]||{})[an]=nt; } }).catch(()=>{ qLoading=null; }); return qLoading; }
+function qScore(exp,got){ const E=exp.split(' ').filter(Boolean), G=got.split(' ').filter(Boolean); if(!E.length) return 1; const used=new Set(); let hit=0; for(const e of E){ for(let i=0;i<G.length;i++){ if(!used.has(i)&&wEq(e,G[i])){ used.add(i); hit++; break; } } } return hit/E.length; }
+const planCache=new Map();
+async function chunkPlan(sn,an){
+  const key=rec+'|'+sn+'|'+an; if(planCache.has(key)) return planCache.get(key);
+  let plan=null;
+  try{
+    unlockBeep(); if(!actx) throw 0;
+    const ab=await (await fetch(netUrl(sn,an))).arrayBuffer();
+    const buf=await actx.decodeAudioData(ab.slice(0));
+    const d=buf.getChannelData(0), sr=buf.sampleRate, W=Math.floor(sr*0.02), n=Math.floor(d.length/W);
+    const e=new Float32Array(n); let mx=0;
+    for(let i=0;i<n;i++){ let sum=0; for(let j=0;j<W;j++){ const v=d[i*W+j]; sum+=v*v; } e[i]=Math.sqrt(sum/W); if(e[i]>mx) mx=e[i]; }
+    const th=mx*0.06, gaps=[]; let i=0;
+    while(i<n){ if(e[i]<th){ let j=i; while(j<n&&e[j]<th) j++; if((j-i)*0.02>=0.22) gaps.push((i+j)/2*0.02); i=j; } else i++; }
+    const dur=buf.duration, cuts=[0]; let last=0;
+    for(const t of gaps){ if(t-last>=4.5 && dur-t>=2.5){ cuts.push(t); last=t; } }
+    cuts.push(dur);
+    if(cuts.length>=3) plan={url:URL.createObjectURL(new Blob([ab],{type:'audio/mpeg'})),cuts};
+  }catch(e){ plan=null; }
+  planCache.set(key,plan); return plan;
+}
+function playSeg(plan,k){ return new Promise(async res=>{
+  const a0=plan.cuts[k], a1=plan.cuts[k+1]; let done=false, iv=null, to=null;
+  const fin=()=>{ if(done) return; done=true; clearInterval(iv); clearTimeout(to); audio.onended=null; audio.onerror=null; try{ audio.pause(); }catch(e){} res(); };
+  audio.onended=fin; audio.onerror=fin; to=setTimeout(fin,(a1-a0)*1000+4000);
+  try{
+    if(audio.src!==plan.url){ audio.src=plan.url; await new Promise(r=>{ audio.onloadedmetadata=()=>r(); setTimeout(r,2500); }); }
+    audio.currentTime=a0; await audio.play();
+    iv=setInterval(()=>{ if(audio.currentTime>=a1-0.03) fin(); },40);
+  }catch(e){ fin(); }
+}); }
 function unlockBeep(){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); if(actx.state==='suspended') actx.resume(); }catch(e){} }
 function beep(){ return new Promise(res=>{ try{ if(!actx){ res(); return; } const o=actx.createOscillator(), g=actx.createGain(); o.frequency.value=880; g.gain.value=0.25; o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime+0.12); setTimeout(res,170); }catch(e){ res(); } }); }
 function waitInactive(ms){ return new Promise(res=>{ if(!active){ res(); return; } const t=setTimeout(()=>{ active=false; res(); },ms); endWaiters.push(()=>{ clearTimeout(t); res(); }); }); }
