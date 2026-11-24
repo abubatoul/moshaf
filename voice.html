@@ -56,7 +56,7 @@ const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== قرآنك الصوتي: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
-const VER='1.07';
+const VER='1.08';
 $('ver').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
@@ -322,6 +322,26 @@ async function handle(t,inGap){
 let sessId=0;
 const CLOSE_MSG='أُغلق الاستماع. اضغط الشاشة للتحدث من جديد.';
 function closeTone(){ return new Promise(res=>{ try{ if(!actx){ res(); return; } const t0=actx.currentTime; [[660,0],[440,.2],[300,.4]].forEach(([f,d])=>{ const o=actx.createOscillator(), g=actx.createGain(); o.frequency.value=f; g.gain.setValueAtTime(0.25,t0+d); g.gain.linearRampToValueAtTime(0,t0+d+.17); o.connect(g); g.connect(actx.destination); o.start(t0+d); o.stop(t0+d+.18); }); setTimeout(res,750); }catch(e){ res(); } }); }
+const SETC=['txt','gap','btns','mark','who','where'];
+function splitCmds(t){
+  const w=String(t||'').trim().split(/\s+/), bad=c=>c==='none'||c==='unknown';
+  for(let i=1;i<w.length;i++){
+    let right;
+    if(/^(و|ثم|بعدين|وبعدين|بعدها)$/.test(w[i])) right=w.slice(i+1).join(' ');
+    else if(/^و./.test(w[i])) right=[w[i].slice(1)].concat(w.slice(i+1)).join(' ');
+    else continue;
+    const left=w.slice(0,i).join(' '); if(!right) continue;
+    if(!bad(parse(left).c) && !bad(parse(right).c)) return [left].concat(splitCmds(right));
+  }
+  return [t];
+}
+async function handleMulti(t){
+  const parts=splitCmds(t); if(parts.length<2) return handle(t,false);
+  parts.sort((x,y)=>(SETC.indexOf(parse(y).c)>=0?1:0)-(SETC.indexOf(parse(x).c)>=0?1:0));
+  let out='';
+  for(const p of parts){ const r=await handle(p,false); if(r==='stop') out='stop'; }
+  return out;
+}
 async function session(){
   stopAudio(); try{ speechSynthesis.cancel(); }catch(e){}
   const my=++sessId, N=3;
@@ -330,7 +350,7 @@ async function session(){
     if(!t){ const m=errMsg(); if(m){ show(m); await say(m); return; }
       if(i<N-1){ show('لم أسمع شيئًا، أعيد الاستماع'); await say('لم أسمع شيئًا.'); if(my!==sessId) return; continue; }
       break; }
-    const r=await handle(t,false); if(my!==sessId) return;
+    const r=await handleMulti(t); if(my!==sessId) return;
     if(r===''){ i=-1; continue; } // نُفّذ أمر إعدادات بلا تشغيل: افتح المايك للأمر التالي تلقائيًا
     if(r==='retry' && i<N-1) continue;
     if(r==='retry') break;
