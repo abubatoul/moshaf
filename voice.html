@@ -56,7 +56,7 @@ const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== قرآنك الصوتي: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
-const VER='1.25';
+const VER='1.26';
 $('ver').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
@@ -123,7 +123,7 @@ function findSurah(q){
   if(q.length>=4){ let best=-1,bd=9; NN.forEach((n,k)=>{ if(n.length<4) return; const d=lev(q,n); if(d<bd){ bd=d; best=k; } }); if(best>=0 && bd<=(q.length>=7?2:1)) return best+1; }
   return 0;
 }
-const NW={واحد:1,احد:1,اثنين:2,اثنان:2,اثنا:2,ثلاثه:3,ثلاث:3,اربعه:4,اربع:4,خمسه:5,خمس:5,سته:6,ست:6,سبعه:7,سبع:7,ثمانيه:8,ثماني:8,ثمان:8,تسعه:9,تسع:9,عشره:10,عشر:10,عشرين:20,ثلاثين:30,اربعين:40,خمسين:50,ستين:60,سبعين:70,ثمانين:80,تسعين:90,مئه:100,ميه:100,مائه:100,مئتين:200,ميتين:200,ثلاثمئه:300};
+const NW={واحد:1,احد:1,اثنين:2,اثنان:2,اثنا:2,ثلاثه:3,ثلاث:3,اربعه:4,اربع:4,خمسه:5,خمس:5,سته:6,ست:6,سبعه:7,سبع:7,ثمانيه:8,ثماني:8,ثمان:8,تسعه:9,تسع:9,عشره:10,عشر:10,عشرين:20,ثلاثين:30,اربعين:40,خمسين:50,ستين:60,سبعين:70,ثمانين:80,تسعين:90,مئه:100,ميه:100,مائه:100,مئتين:200,ميتين:200,مايتين:200,ميتان:200,مايتان:200,ماتين:200,مايه:100,مية:100,ثلاثمئه:300};
 function numWords(q){ q=q.trim(); if(/^\d+$/.test(q)) return +q; let t=0,any=false; for(const w of q.split(' ')){ if(!w) continue; let k=norm(w); if(NW[k]==null && k[0]==='و' && NW[k.slice(1)]!=null) k=k.slice(1); if(NW[k]!=null){ t+=NW[k]; any=true; } else if(/^\d+$/.test(k)){ t+=+k; any=true; } else return 0; } return any?t:0; }
 const KEY={afasy:['عفاسي','مشاري'],aj:['عجمي'],bm:['عبدالباسط','عبد الباسط','باسط'],hs:['حصري'],mn:['منشاوي'],bn:['البنا','بنا'],tb:['طبلاوي'],mq:['معيقلي','ماهر'],ds:['دوسري','ياسر'],qt:['قطامي','ناصر'],sd:['سديس'],sh:['شريم'],jh:['جهني'],gm:['غامدي','سعد'],hd:['حذيفي'],kr:['منصوري','كريم'],pk:['بيشه','بيشوا'],rk:['رعد كردي','رعد الكردي'],az:['عزاوي'],ak:['كاظمي'],kh:['خليل'],dr:['ضاري','العاصي'],mt:['ميثم','التمار']};
 function findRec(q){ q=norm(q).replace(/ال/g,''); for(const k in KEY){ for(const w of KEY[k]){ if(q.includes(norm(w).replace(/ال/g,''))) return k; } } return ''; }
@@ -318,7 +318,7 @@ function parse(t){
     if(has('السابق','السابقه','قبلها','قبله','ارجع','رجع','رجوع','السابقة')) return {c:'prev'};
   }
   let m;
-  if((m=q.match(/^(?:الايه|ايه)\s+(.+)$/))){ const n=numWords(m[1]); if(n) return {c:'ayah',n}; }
+  if((m=q.match(/^(?:الايه|ايه)\s+(?:رقم\s+)?(.+)$/))){ const n=numWords(m[1]); if(n) return {c:'ayah',n}; }
   if(/^(شغل|ابدا|تشغيل|شغل القران|استمر)$/.test(q)) return {c:'play'};
   const rk=findRec(q);
   if(rk && hasS){ const sq=q.replace(/(بصوت|القاري|الشيخ).*$/,'').trim(); const sn=findSurah(sq); if(sn) return {c:'surah',n:sn,k:rk}; return {c:'rec',k:rk}; }
