@@ -56,7 +56,7 @@ const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== قرآنك الصوتي: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
-const VER='1.18';
+const VER='1.19';
 $('ver').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
@@ -73,7 +73,14 @@ let QUIET=false;
 function say(t){ show(t); if(QUIET) return Promise.resolve(); const cid=CLIPMAP[t]; if(cid&&CLIPS[cid]) return playClip(cid); return say0(t); }
 const PRON=[[/الحصري/g,'الحُصري'],[/المعيقلي/g,'المْعيقْلي'],[/السديس/g,'السُديس'],[/الغامدي/g,'الغامْدي'],[/العفاسي/g,'العْفاسي'],[/الحذيفي/g,'الحُذيفي'],[/(^|\s)الملك(?=[\s.،,]|$)/g,'$1المُلك']];
 function pron(t){ PRON.forEach(([a,b])=>{ t=t.replace(a,b); }); return t; }
-function say0(t){ return new Promise(res=>{ try{ if(!window.speechSynthesis){ res(); return; } try{ if(speechSynthesis.speaking||speechSynthesis.pending) speechSynthesis.cancel(); }catch(e){} const u=new SpeechSynthesisUtterance(pron(t)); u.lang='ar-SA'; u.rate=0.95; const v=(speechSynthesis.getVoices()||[]).find(x=>/^ar/i.test(x.lang)); if(v) u.voice=v; let d=false; const fin=()=>{ if(d) return; d=true; dbg('say-end'); res(); }; u.onend=u.onerror=fin; dbg('say: '+t.slice(0,18)); speechSynthesis.speak(u); setTimeout(fin,Math.min(9000,1500+t.length*120)); }catch(e){ res(); } }); }
+function say0(t){ return new Promise(async res=>{ try{ if(!window.speechSynthesis){ res(); return; }
+  try{ await waitInactive(900); }catch(e){} try{ if(actx&&actx.state==='suspended') actx.resume(); }catch(e){}
+  let d=false, started=false, tries=0; const fin=()=>{ if(d) return; d=true; dbg('say-end'); res(); };
+  const go=()=>{ tries++; try{ if(speechSynthesis.speaking||speechSynthesis.pending) speechSynthesis.cancel(); }catch(e){}
+    const u=new SpeechSynthesisUtterance(pron(t)); u.lang='ar-SA'; u.rate=0.95; u.volume=1; const v=(speechSynthesis.getVoices()||[]).find(x=>/^ar/i.test(x.lang)); if(v) u.voice=v;
+    u.onstart=()=>{ started=true; }; u.onend=fin; u.onerror=fin; dbg('say: '+t.slice(0,18)); setTimeout(()=>{ try{ speechSynthesis.speak(u); }catch(e){ fin(); } },tries>1?200:250);
+    setTimeout(()=>{ if(!started && !d && tries<2){ dbg('say retry'); go(); } },1800); };
+  go(); setTimeout(fin,Math.min(11000,2500+t.length*120)); }catch(e){ res(); } }); }
 new MutationObserver(()=>{ $('bigS').style.display=(['اضغط للبدء','أسمعك الآن'].indexOf($('bigT').textContent)>=0)?'':'none'; }).observe($('bigT'),{childList:true,characterData:true,subtree:true});
 function show(t,big){ $('st').textContent=t; if(big!=null) $('bigT').textContent=big; }
 const NN=NAMES.map(n=>norm(n).replace(/^ال/,'').replace(/ ال/g,' '));
