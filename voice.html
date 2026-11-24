@@ -56,7 +56,7 @@ const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== قرآنك الصوتي: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
-const VER='1.31';
+const VER='1.32';
 $('ver').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
@@ -380,11 +380,12 @@ async function handleMulti(t){
   for(let k=0;k<parts.length;k++){ QUIET=(k<parts.length-1); try{ const r=await handle(parts[k],false); if(r==='stop') out='stop'; } finally{ QUIET=false; } }
   return out;
 }
+let sessListening=false, resumeOnTap=false;
 async function session(){
-  stopAudio(); try{ speechSynthesis.cancel(); }catch(e){}
+  resumeOnTap=playing; stopAudio(); try{ speechSynthesis.cancel(); }catch(e){}
   const my=++sessId, N=3;
   for(let i=0;i<N;i++){
-    const t=await listenOnce(8000,i>0); if(my!==sessId) return; $('bigT').textContent=t?'جاري التنفيذ':'اضغط للتحدث';
+    sessListening=true; const t=await listenOnce(8000,i>0); sessListening=false; if(my!==sessId) return; $('bigT').textContent=t?'جاري التنفيذ':'اضغط للتحدث';
     if(!t){ const m=errMsg(); if(m){ show(m); await say(m); return; }
       if(i<N-1){ show('لم أسمع شيئًا، أعيد الاستماع'); await say('لم أسمع شيئًا.'); if(my!==sessId) return; continue; }
       break; }
@@ -400,7 +401,7 @@ const SILENT="data:audio/wav;base64,UklGRmQGAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAAC
 let opened=false, openTok=0;
 $('big').addEventListener('click',()=>{
   unlockTTS(); unlockBeep(); chimeOnce(); if(!started){ started=true; try{ audio.src=SILENT; const pr=audio.play(); if(pr&&pr.catch) pr.catch(()=>{}); }catch(e){} }
-  if(opened && cur){ sessId++; token++; const c=cur; c.got=''; c.fin(); stopAudio(); try{ speechSynthesis.cancel(); }catch(e){} $('bigT').textContent='اضغط للتحدث'; show('متوقف مؤقتًا. اضغط للتحدث.'); return; }
+  if(opened && cur && sessListening){ sessId++; const rs=resumeOnTap; resumeOnTap=false; sessListening=false; const c=cur; c.got=''; c.fin(); try{ speechSynthesis.cancel(); }catch(e){} if(rs){ $('bigT').textContent='جارٍ المتابعة'; playFrom(surah,ayah); } else { token++; stopAudio(); $('bigT').textContent='اضغط للتحدث'; show('اضغط للتحدث.'); } return; }
   const ot=++openTok;
   if(!opened){ opened=true; (async()=>{ $('bigT').textContent='جارٍ التحضير'; await sleep(500); if(ot!==openTok) return; await playClip(12); if(ot!==openTok) return; if(!playing&&(surah!==1||ayah!==1)){ show('آخر آية: سورة '+NAMES[surah-1]+'، آية '+ayah+'. قل: اكمل القراءة.'); } session(); })(); return; }
   session();
