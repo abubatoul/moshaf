@@ -40,6 +40,7 @@ body.nobtn{box-sizing:border-box;padding-bottom:calc(36px + env(safe-area-inset-
 #st{margin:0 14px;padding:12px 14px;font-size:1.2rem;min-height:3.2em;border-radius:16px;background:rgba(255,255,255,.08)}
 #row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 14px calc(40px + env(safe-area-inset-bottom))}
 #bMark{grid-column:1/-1;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+#row button .ic{height:1.7rem;width:auto;vertical-align:middle;margin-inline-end:.5rem}
 #row button{height:3.4rem;border-radius:16px;border:0;background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:1.1rem;font-weight:700}
 #ay{display:none;margin:6px 14px 0;padding:10px 14px;border-radius:16px;background:rgba(255,255,255,.08);text-align:center;direction:rtl;font-family:"Geeza Pro","Damascus","Noto Naskh Arabic",serif;line-height:2.1;max-height:30vh;overflow-y:auto;color:#fff;-webkit-overflow-scrolling:touch}
 #ay span.ok{color:#7fe3cf}
@@ -50,14 +51,14 @@ body.nobtn{box-sizing:border-box;padding-bottom:calc(36px + env(safe-area-inset-
 <div id="hp" role="dialog" aria-modal="true" aria-label="الأوامر الصوتية" hidden><button type="button" id="hpX" aria-label="إغلاق">✕</button><h2>الأوامر الصوتية</h2><div class="sec"><h3>التشغيل</h3><div class="r"><b>اذكر اسم السورة</b><span>مثل: سورة الملك</span></div><div class="r"><b>القارئ العفاسي</b><span>يغيّر القارئ</span></div><div class="r"><b>سورة الملك بصوت العفاسي</b><span>سورة وقارئ معاً</span></div><div class="r"><b>اقرأ · كمل · اكمل القراءة</b><span>يكمل من مكان الوقوف</span></div><div class="r"><b>آية ثلاثين</b><span>ينتقل إلى الآية</span></div><div class="r"><b>أعد</b><span>يعيد الآية</span></div><div class="r"><b>التالي · السابق</b><span>آية بعد أو قبل</span></div><div class="r"><b>سورة تالية · سورة سابقة</b><span>سورة بعد أو قبل</span></div><div class="r"><b>أوقف</b><span>يوقف التشغيل</span></div><div class="r"><b>من القارئ؟</b><span>يقول اسم القارئ</span></div></div><div class="sec"><h3>مكان الوقوف</h3><div class="r"><b>وين وقفت؟</b><span>يقول السورة والآية</span></div><div class="r"><b>احفظ</b><span>يحفظ العلامة هنا</span></div><div class="r"><b>اذهب للعلامة</b><span>يرجع للعلامة المحفوظة</span></div></div><div class="sec"><h3>الإعدادات (نطق الأمر يفعّله - وإعادته يلغيه)</h3><div class="r"><b>ترديد</b><span>تردد بعد القارئ آية آية</span></div><div class="r"><b>فاصلة</b><span>الاستماع بين الآيات</span></div><div class="r"><b>نص</b><span>إظهار أو إخفاء نص القرآن</span></div><div class="r"><b>الأوامر · أزرار</b><span>إظهار أو إخفاء الأزرار</span></div><div class="r"><b>بدون فاصلة · بدون ترديد</b><span>إلغاء مباشر</span></div></div><div class="sec"><h3>مفيد</h3><div class="r"><b>مساعدة</b><span>يقرأ لك الأوامر</span></div><div class="r"><b>اضغط أي مكان</b><span>للتحدث (عند إخفاء الأزرار)</span></div></div><button type="button" id="hpSay">استمع للأوامر</button><button type="button" id="hpClose">إغلاق</button></div><div id="st" aria-live="polite"></div>
 <div id="ay" aria-hidden="true"></div>
 <pre id="dbg" style="display:none;margin:0 14px;font-size:.8rem;opacity:.75;direction:ltr;text-align:left;white-space:pre-wrap;max-height:9.5em;overflow:hidden"></pre>
-<div id="row"><button id="bTalq" type="button"></button><button id="bGap" type="button"></button><button id="bStop" type="button">إيقاف</button><button id="bTxt" type="button"></button><button id="bMark" type="button">وضع علامة</button></div>
+<div id="row"><button id="bStop" type="button">إيقاف</button><button id="bGap" type="button"></button><button id="bTalq" type="button"></button><button id="bTxt" type="button"></button><button id="bMark" type="button">وضع علامة</button><button id="bGo" type="button" style="display:none">الذهاب للعلامة</button><button id="bNew" type="button" style="display:none">علامة جديدة</button></div>
 <script>
 const NAMES=["الفاتحة","البقرة","آل عمران","النساء","المائدة","الأنعام","الأعراف","الأنفال","التوبة","يونس","هود","يوسف","الرعد","ابراهيم","الحجر","النحل","الإسراء","الكهف","مريم","طه","الأنبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم","لقمان","السجدة","الأحزاب","سبإ","فاطر","يس","الصافات","ص","الزمر","غافر","فصلت","الشورى","الزخرف","الدخان","الجاثية","الأحقاف","محمد","الفتح","الحجرات","ق","الذاريات","الطور","النجم","القمر","الرحمن","الواقعة","الحديد","المجادلة","الحشر","الممتحنة","الصف","الجمعة","المنافقون","التغابن","الطلاق","التحريم","الملك","القلم","الحاقة","المعارج","نوح","الجن","المزمل","المدثر","القيامة","الانسان","المرسلات","النبإ","النازعات","عبس","التكوير","الإنفطار","المطففين","الإنشقاق","البروج","الطارق","الأعلى","الغاشية","الفجر","البلد","الشمس","الليل","الضحى","الشرح","التين","العلق","القدر","البينة","الزلزلة","العاديات","القارعة","التكاثر","العصر","الهمزة","الفيل","قريش","الماعون","الكوثر","الكافرون","النصر","المسد","الإخلاص","الفلق","الناس"];
 const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== قرآنك الصوتي: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
-const VER='1.39';
+const VER='1.43';
 $('ver').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
@@ -311,7 +312,7 @@ function parse(t){
   if(/(مساعده|ساعدني|شنو اقول|ماذا اقول)/.test(q)) return {c:'help'};
   if(/(وين|اين|فين) (وقفت|وصلت|وصلنا|وقفنا|اخر)|مكان (الوقوف|وقوفي)|موضع (الوقوف|وقوفي)|اخر موضع|وين وصلنا/.test(q)) return {c:'where'};
   if(/(ارجع|اذهب|روح|انتقل|كمل|اكمل|شغل|اقرا|ابدا).*(العلامه|للعلامه|علامتي|المحفوظ|للمحفوظ)|^(العلامه|علامتي)$/.test(q)) return {c:'gomark'};
-  if(/^(احفظ|علم|علمها|علمه)( (المكان|هنا|الموضع|العلامه|الايه|مكاني|موضعي))?$/.test(q) || /^(ضع|حط|سوي|اضف|اعمل) علامه( هنا)?$/.test(q) || /^(احفظ|علم) (هذا|هذه) ?(المكان|الموضع)?$/.test(q)) return {c:'mark'};
+  if(/^(احفظ|علم|علمها|علمه)( (المكان|هنا|الموضع|العلامه|الايه|مكاني|موضعي))?$/.test(q) || /^(ضع|حط|سوي|اضف|اعمل) علامه( جديده)?( هنا)?$/.test(q) || /^علامه جديده( هنا)?$/.test(q) || /^(احفظ|علم) (هذا|هذه) ?(المكان|الموضع)?$/.test(q)) return {c:'mark'};
   if(q==='كمل' && !playing) return {c:'play'};
   if(/(من القاري|من يقرا|مين القاري)/.test(q)) return {c:'who'};
   if(/(سوره تاليه|السوره التاليه|السوره بعدها)/.test(q)) return {c:'nextS'};
@@ -410,7 +411,7 @@ $('big').addEventListener('click',()=>{
   if(!opened){ opened=true; (async()=>{ $('bigT').textContent='جارٍ التحضير'; await sleep(500); if(ot!==openTok) return; await playClip(12); if(ot!==openTok) return; if(!playing&&(surah!==1||ayah!==1)){ show('آخر آية: سورة '+NAMES[surah-1]+'، آية '+ayah+'. قل: اكمل القراءة.'); } session(); })(); return; }
   session();
 });
-document.body.addEventListener('click',e=>{ if(e.target.closest('button')||e.target.closest('#hp')) return; $('big').click(); });
+document.body.addEventListener('click',e=>{ if(e.composedPath().some(n=>n&&(n.tagName==='BUTTON'||n.id==='hp'))) return; $('big').click(); });
 if(/[?&]debug/.test(location.search)) $('dbg').style.display='block';
 
 function chime(){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); const t=actx.currentTime+0.05; [[659.25,0],[880,0.16],[1318.5,0.32]].forEach(([f,d])=>{ const o=actx.createOscillator(), g=actx.createGain(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t+d); g.gain.linearRampToValueAtTime(0.35,t+d+0.02); g.gain.exponentialRampToValueAtTime(0.0008,t+d+0.8); o.connect(g); g.connect(actx.destination); o.start(t+d); o.stop(t+d+0.9); }); }catch(e){} }
@@ -418,7 +419,9 @@ function chime(){ try{ actx=actx||new (window.AudioContext||window.webkitAudioCo
 let chimed=false;
 function chimeOnce(){ if(chimed) return; chimed=true; try{ unlockBeep(); const go=()=>{ try{ chime(); }catch(e){} }; if(actx&&actx.state!=='running'&&actx.resume){ const p=actx.resume(); if(p&&p.then) p.then(go,go); else go(); } else go(); }catch(e){} }
 function tick(on){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); const t=actx.currentTime+0.02, f=on?[620,930]:[760,470]; f.forEach((fr,i)=>{ const o=actx.createOscillator(), g=actx.createGain(); o.type='sine'; o.frequency.value=fr; g.gain.setValueAtTime(0.0001,t+i*0.11); g.gain.linearRampToValueAtTime(0.3,t+i*0.11+0.015); g.gain.exponentialRampToValueAtTime(0.0008,t+i*0.11+0.16); o.connect(g); g.connect(actx.destination); o.start(t+i*0.11); o.stop(t+i*0.11+0.18); }); }catch(e){} }
-function setTog(b,label,on){ b.textContent=(on?'● ':'')+label; b.style.background=on?'#b3541e':''; b.setAttribute('aria-pressed',on?'true':'false'); b.setAttribute('aria-label',label+': '+(on?'مفعّل':'معطّل')); }
+const GAP_IC='<svg class="ic" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100" fill="none"><defs><path id="gc" fill-rule="evenodd" d="M40 2 C43 10 53 14 66 14 C57 20 47 22 40 20 C33 22 23 20 14 14 C27 14 37 10 40 2 Z M36.8 14.5 a3.2 3.2 0 1 0 6.4 0 a3.2 3.2 0 1 0 -6.4 0 Z"/><mask id="gm"><rect width="80" height="100" fill="#fff"/><rect x="30" y="8" width="20" height="14" fill="#000"/><rect x="30" y="78" width="20" height="14" fill="#000"/></mask></defs><ellipse cx="40" cy="50" rx="29" ry="36" stroke="#ffe49a" stroke-width="4" mask="url(#gm)"/><g fill="#ffe49a"><use href="#gc"/><use href="#gc" transform="translate(0 100) scale(1 -1)"/></g></svg>';
+const TALQ_IC='<svg class="ic" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 70" fill="none"><defs><path id="h" d="M20 68 L22 54 C14 46 8 36 8 25 C8 11 22 3 36 3 C48 3 58 9 60 19 C60.5 22 60.8 24 61.3 26.5 C62 28 62.5 29 63.5 30.5 C65 32.5 67 35.5 69 38 C70 39 69.5 41 68 41.5 L64 42 C63.5 43.5 64.5 44 64 45 C63.5 46 62.5 46.2 62 46.8 C63.4 48 63.4 49.5 62 50.5 C62.4 52 62 53.5 60 55 C55 57.5 49 57 45 58 C44 62 45 66 46 70 Z"/><g id="w" stroke="#ffe49a" stroke-width="3.2" stroke-linecap="round"><path d="M72 42 Q75 47 72 52"/><path d="M77 38 Q82.5 47 77 56"/><path d="M82 34 Q90 47 82 60"/></g></defs><g fill="#ffe49a"><use href="#h"/><use href="#h" transform="translate(190 0) scale(-1 1)"/></g><use href="#w"/><use href="#w" transform="translate(190 0) scale(-1 1)"/></svg>';
+function setTog(b,label,on,ic){ b.innerHTML=''; if(ic){ const sp=document.createElement('span'); sp.innerHTML=ic; b.appendChild(sp.firstChild); } b.appendChild(document.createTextNode((on?'● ':'')+label)); b.style.background=on?'#b3541e':''; b.setAttribute('aria-pressed',on?'true':'false'); b.setAttribute('aria-label',label+': '+(on?'مفعّل':'معطّل')); }
 function updGap(){ setTog($('bGap'),'فاصلة بين الآيات',gapListen); }
 updGap();
 $('bGap').addEventListener('click',()=>{ gapListen=!gapListen; save(); updGap(); tick(gapListen); show(gapListen?'سأستمع إلى أوامرك بين الآيات':'لن أستمع بين الآيات'); });
@@ -429,22 +432,27 @@ function setBtns(on){ showBtns=on; lsSet('btns',on); $('row').style.display=on?'
 setBtns(showBtns);
 $('bTog').addEventListener('click',()=>{ setBtns(!showBtns); show(showBtns?'تم إظهار الأزرار':'تم إخفاء الأزرار'); });
 let mark=lsGet('mark',null);
-function updMark(){ const b=$('bMark'); b.textContent=mark?'الذهاب للعلامة':'وضع علامة'; b.setAttribute('aria-label',mark?'الذهاب للعلامة. اضغط مطولًا لوضع علامة جديدة':'وضع علامة في المكان الحالي'); }
+let mkOpen=false, mkT=null;
+function updMark(){ const m=$('bMark'), g=$('bGo'), n=$('bNew'); const open=!!(mark&&mkOpen); clearTimeout(mkT); if(open) mkT=setTimeout(()=>{ mkOpen=false; updMark(); },30000); m.style.display=open?'none':''; g.style.display=open?'':'none'; n.style.display=open?'':'none'; m.textContent=mark?'العلامة':'وضع علامة'; m.setAttribute('aria-label',mark?'العلامة. اضغط لإظهار الذهاب للعلامة أو علامة جديدة':'وضع علامة في المكان الحالي'); m.setAttribute('aria-expanded',open?'true':'false'); }
 async function saveMark(){ const p=curAy?{s:curAy[0],a:curAy[1]}:{s:surah,a:ayah}; mark={s:p.s,a:p.a,r:rec}; lsSet('mark',mark); updMark(); const m='تم حفظ العلامة: سورة '+NAMES[p.s-1]+'، آية '+p.a+'.'; if(playing){ show(m); unlockBeep(); await beep(); await beep(); } else await say(m); }
 async function goMark(){ if(!mark){ await say('ما فيه علامة محفوظة. قل: احفظ المكان، لحفظ علامة.'); return; } stopAudio(); if(mark.r&&REC[mark.r]) rec=mark.r; surah=mark.s; ayah=mark.a; save(); await say('الذهاب للعلامة: سورة '+NAMES[surah-1]+'، آية '+ayah+'.'); playFrom(surah,ayah); }
 updMark();
-let lpT=null, lpDone=false; const mb=$('bMark');
-mb.addEventListener('pointerdown',()=>{ lpDone=false; clearTimeout(lpT); lpT=setTimeout(()=>{ lpDone=true; unlockBeep(); saveMark(); },650); });
-['pointerup','pointerleave','pointercancel'].forEach(ev=>mb.addEventListener(ev,()=>clearTimeout(lpT)));
-mb.addEventListener('contextmenu',e=>e.preventDefault());
-mb.addEventListener('click',()=>{ if(lpDone){ lpDone=false; return; } unlockBeep(); if(mark) goMark(); else saveMark(); });
+const mb=$('bMark');
+mb.addEventListener('click',()=>{ unlockBeep(); if(mark){ mkOpen=true; updMark(); show('اختر: الذهاب للعلامة، أو علامة جديدة'); } else saveMark(); });
+$('bGo').addEventListener('click',()=>{ unlockBeep(); mkOpen=false; updMark(); goMark(); });
+$('bNew').addEventListener('click',()=>{ unlockBeep(); mkOpen=false; updMark(); saveMark(); });
+$('bGo').setAttribute('aria-label','الذهاب للعلامة المحفوظة'); $('bNew').setAttribute('aria-label','وضع علامة جديدة في المكان الحالي بدل القديمة');
 updTxt();
 $('bTxt').addEventListener('click',()=>{ setTxt(!showTxt); tick(showTxt); });
 function updTalq(){ setTog($('bTalq'),'الترديد',talq); }
 updTalq();
 $('bTalq').addEventListener('click',()=>{ if(!talq&&isFull()){ show('الترديد يعمل مع القراء آية آية، اختر مثلاً العفاسي'); return; } talq=!talq; save(); updTalq(); tick(talq); show(talq?'تم تفعيل الترديد: بعد كل آية تقرأ أنت':'تم إلغاء الترديد'); });
 document.addEventListener('pointerdown',unlockTTS,{once:true,passive:true});
-$('bStop').addEventListener('click',()=>{ stopAudio(); try{ speechSynthesis.cancel(); }catch(e){} show('تم الإيقاف','اضغط للتحدث'); });
+function stopAll(){ sessId++; sessListening=false; resumeOnTap=false; try{ if(cur){ const c=cur; c.got=''; c.fin(); } }catch(e){} try{ getRecog().abort(); }catch(e){} stopAudio(); try{ speechSynthesis.cancel(); }catch(e){} $('bigT').textContent='اضغط للتحدث'; }
+let wasPl=false;
+function updStop(){ const b=$('bStop'); const on=!!playing; const k=on?'s':'p'; if(playing&&!wasPl&&mkOpen){ mkOpen=false; updMark(); } wasPl=playing; if(b.dataset.k===k) return; b.dataset.k=k; setTog(b,on?'إيقاف':'تشغيل',false); }
+setInterval(updStop,250); updStop();
+$('bStop').addEventListener('click',()=>{ unlockTTS(); unlockBeep(); if(playing){ stopAll(); show('تم إيقاف كل شيء','اضغط الشاشة للتحدث'); } else { sessId++; try{ speechSynthesis.cancel(); }catch(e){} opened=true; $('bigT').textContent='جارٍ التشغيل'; playFrom(surah,ayah||1); } updStop(); });
 function hpOpen(on){ const h=$('hp'); if(on){ h.hidden=false; h.classList.add('on'); h.scrollTop=0; try{ const h2=h.querySelector('h2'); h2.setAttribute('tabindex','-1'); h2.focus({preventScroll:true}); }catch(e){} } else { h.classList.remove('on'); h.hidden=true; try{ speechSynthesis.cancel(); }catch(e){} } }
 $('bHelp').addEventListener('click',()=>{ stopAudio(); hpOpen(true); });
 $('hpClose').addEventListener('click',()=>hpOpen(false)); $('hpX').addEventListener('click',()=>hpOpen(false));
