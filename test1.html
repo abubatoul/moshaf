@@ -449,7 +449,8 @@ updTalq();
 $('bTalq').addEventListener('click',()=>{ if(!talq&&isFull()){ show('الترديد يعمل مع القراء آية آية، اختر مثلاً العفاسي'); return; } talq=!talq; save(); updTalq(); tick(talq); show(talq?'تم تفعيل الترديد: بعد كل آية تقرأ أنت':'تم إلغاء الترديد'); });
 document.addEventListener('pointerdown',unlockTTS,{once:true,passive:true});
 function stopAll(){ sessId++; sessListening=false; resumeOnTap=false; try{ if(cur){ const c=cur; c.got=''; c.fin(); } }catch(e){} try{ getRecog().abort(); }catch(e){} stopAudio(); try{ speechSynthesis.cancel(); }catch(e){} $('bigT').textContent='اضغط للتحدث'; }
-function updStop(){ const b=$('bStop'); const on=!!(playing||sessListening); const k=on?'s':'p'; if(on&&playing&&mkOpen){ mkOpen=false; updMark(); } if(b.dataset.k===k) return; b.dataset.k=k; setTog(b,on?'إيقاف':'تشغيل',false); }
+let wasPl=false;
+function updStop(){ const b=$('bStop'); const on=!!(playing||sessListening); const k=on?'s':'p'; if(playing&&!wasPl&&mkOpen){ mkOpen=false; updMark(); } wasPl=playing; if(b.dataset.k===k) return; b.dataset.k=k; setTog(b,on?'إيقاف':'تشغيل',false); }
 setInterval(updStop,250); updStop();
 $('bStop').addEventListener('click',()=>{ unlockTTS(); unlockBeep(); if(playing||sessListening){ stopAll(); show('تم إيقاف كل شيء','اضغط الشاشة للتحدث'); } else { sessId++; try{ speechSynthesis.cancel(); }catch(e){} opened=true; $('bigT').textContent='جارٍ التشغيل'; playFrom(surah,ayah||1); } updStop(); });
 function hpOpen(on){ const h=$('hp'); if(on){ h.hidden=false; h.classList.add('on'); h.scrollTop=0; try{ const h2=h.querySelector('h2'); h2.setAttribute('tabindex','-1'); h2.focus({preventScroll:true}); }catch(e){} } else { h.classList.remove('on'); h.hidden=true; try{ speechSynthesis.cancel(); }catch(e){} } }
