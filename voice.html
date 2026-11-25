@@ -58,7 +58,7 @@ const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== قرآنك الصوتي: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
-const VER='1.43';
+const VER='1.44';
 $('ver').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
@@ -152,6 +152,7 @@ function savePos(){ const c=curAy; if(c && surah===c[0] && (ayah===c[1]||ayah===
 function stopAudio(){ try{ savePos(); }catch(e){} token++; playing=false; try{ audio.pause(); }catch(e){} }
 function waitEnd(){ return new Promise(res=>{ audio.onended=res; audio.onerror=res; }); }
 async function playFrom(s,a){
+  try{ if(mkOpen){ mkOpen=false; updMark(); } }catch(e){}
   stopAudio(); const my=token; surah=s; ayah=a||1; save(); playing=true;
   if(isFull()){
     if((REC[rec][3]||[]).includes(s)){ playing=false; await say('سورة '+NAMES[s-1]+' غير متوفرة عند هذا القارئ'); return; }
@@ -450,7 +451,7 @@ $('bTalq').addEventListener('click',()=>{ if(!talq&&isFull()){ show('الترد�
 document.addEventListener('pointerdown',unlockTTS,{once:true,passive:true});
 function stopAll(){ sessId++; sessListening=false; resumeOnTap=false; try{ if(cur){ const c=cur; c.got=''; c.fin(); } }catch(e){} try{ getRecog().abort(); }catch(e){} stopAudio(); try{ speechSynthesis.cancel(); }catch(e){} $('bigT').textContent='اضغط للتحدث'; }
 let wasPl=false;
-function updStop(){ const b=$('bStop'); const on=!!playing; const k=on?'s':'p'; if(playing&&!wasPl&&mkOpen){ mkOpen=false; updMark(); } wasPl=playing; if(b.dataset.k===k) return; b.dataset.k=k; setTog(b,on?'إيقاف':'تشغيل',false); }
+function updStop(){ const b=$('bStop'); const on=!!playing; const k=on?'s':'p'; if(b.dataset.k===k) return; b.dataset.k=k; setTog(b,on?'إيقاف':'تشغيل',false); }
 setInterval(updStop,250); updStop();
 $('bStop').addEventListener('click',()=>{ unlockTTS(); unlockBeep(); if(playing){ stopAll(); show('تم إيقاف كل شيء','اضغط الشاشة للتحدث'); } else { sessId++; try{ speechSynthesis.cancel(); }catch(e){} opened=true; $('bigT').textContent='جارٍ التشغيل'; playFrom(surah,ayah||1); } updStop(); });
 function hpOpen(on){ const h=$('hp'); if(on){ h.hidden=false; h.classList.add('on'); h.scrollTop=0; try{ const h2=h.querySelector('h2'); h2.setAttribute('tabindex','-1'); h2.focus({preventScroll:true}); }catch(e){} } else { h.classList.remove('on'); h.hidden=true; try{ speechSynthesis.cancel(); }catch(e){} } }
