@@ -432,8 +432,8 @@ function setBtns(on){ showBtns=on; lsSet('btns',on); $('row').style.display=on?'
 setBtns(showBtns);
 $('bTog').addEventListener('click',()=>{ setBtns(!showBtns); show(showBtns?'تم إظهار الأزرار':'تم إخفاء الأزرار'); });
 let mark=lsGet('mark',null);
-let mkOpen=false;
-function updMark(){ const m=$('bMark'), g=$('bGo'), n=$('bNew'); const open=!!(mark&&mkOpen); m.style.display=open?'none':''; g.style.display=open?'':'none'; n.style.display=open?'':'none'; m.textContent=mark?'العلامة':'وضع علامة'; m.setAttribute('aria-label',mark?'العلامة. اضغط لإظهار الذهاب للعلامة أو علامة جديدة':'وضع علامة في المكان الحالي'); m.setAttribute('aria-expanded',open?'true':'false'); }
+let mkOpen=false, mkT=null;
+function updMark(){ const m=$('bMark'), g=$('bGo'), n=$('bNew'); const open=!!(mark&&mkOpen); clearTimeout(mkT); if(open) mkT=setTimeout(()=>{ mkOpen=false; updMark(); },30000); m.style.display=open?'none':''; g.style.display=open?'':'none'; n.style.display=open?'':'none'; m.textContent=mark?'العلامة':'وضع علامة'; m.setAttribute('aria-label',mark?'العلامة. اضغط لإظهار الذهاب للعلامة أو علامة جديدة':'وضع علامة في المكان الحالي'); m.setAttribute('aria-expanded',open?'true':'false'); }
 async function saveMark(){ const p=curAy?{s:curAy[0],a:curAy[1]}:{s:surah,a:ayah}; mark={s:p.s,a:p.a,r:rec}; lsSet('mark',mark); updMark(); const m='تم حفظ العلامة: سورة '+NAMES[p.s-1]+'، آية '+p.a+'.'; if(playing){ show(m); unlockBeep(); await beep(); await beep(); } else await say(m); }
 async function goMark(){ if(!mark){ await say('ما فيه علامة محفوظة. قل: احفظ المكان، لحفظ علامة.'); return; } stopAudio(); if(mark.r&&REC[mark.r]) rec=mark.r; surah=mark.s; ayah=mark.a; save(); await say('الذهاب للعلامة: سورة '+NAMES[surah-1]+'، آية '+ayah+'.'); playFrom(surah,ayah); }
 updMark();
