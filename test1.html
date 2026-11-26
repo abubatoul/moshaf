@@ -48,6 +48,10 @@ body.nobtn{box-sizing:border-box;padding-bottom:calc(36px + env(safe-area-inset-
 @media (prefers-reduced-motion:reduce){#big.wv.wvp #wave i{animation:none;transform:scaleY(2)}}
 #pk{display:none;grid-template-columns:1fr 1fr;gap:10px;margin:10px 14px 0}
 #pk.on{display:grid}
+#spd{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:6px 6px 0;direction:rtl}
+#spd label{font-size:1.05rem;font-weight:700;white-space:nowrap}
+#spd b{color:#ffe49a;font-variant-numeric:tabular-nums;display:inline-block;min-width:3.4em;unicode-bidi:isolate;text-align:center}
+#spdR{flex:1;height:2.2rem;accent-color:#b3541e}
 #pk button{height:3.4rem;border-radius:16px;border:0;background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:1.1rem;font-weight:700}
 #pkSh{position:fixed;inset:0;z-index:60;background:#0f3d33;overflow:auto;padding:14px 16px 40px;display:none;direction:rtl;-webkit-overflow-scrolling:touch}
 #pkSh.on{display:block}
@@ -80,7 +84,7 @@ body.run #ay{max-height:42vh}
 <div id="ay" aria-hidden="true"></div>
 <pre id="dbg" style="display:none;margin:0 14px;font-size:.8rem;opacity:.75;direction:ltr;text-align:left;white-space:pre-wrap;max-height:9.5em;overflow:hidden"></pre>
 <div id="feat"></div>
-<div id="pk"><button id="pkR" type="button">القارئ</button><button id="pkS" type="button">السورة</button></div>
+<div id="pk"><button id="pkR" type="button">القارئ</button><button id="pkS" type="button">السورة</button><div id="spd"><label for="spdR">السرعة <b id="spdV" dir="ltr">1×</b></label><input id="spdR" type="range" min="0.5" max="2" step="0.05" value="1" aria-label="سرعة القراءة"></div></div>
 <div id="pkSh" role="dialog" aria-modal="true" hidden><button id="pkX" type="button" aria-label="إغلاق">✕</button><h2 id="pkH"></h2><input id="pkQ" type="search" placeholder="ابحث بالاسم" aria-label="بحث"><div id="pkL"></div></div>
 <div id="ctl"><div id="row"><button id="bStop" type="button">إيقاف</button><button id="bOpt" type="button" aria-expanded="false">خيارات</button></div><div id="opts"><button id="bGap" type="button"></button><button id="bTalq" type="button"></button><button id="bTxt" type="button"></button><button id="bMark" type="button">وضع علامة</button><button id="bGo" type="button" style="display:none">الذهاب للعلامة</button><button id="bNew" type="button" style="display:none">علامة جديدة</button></div></div>
 <script>
@@ -89,7 +93,7 @@ const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== قرآنك الصوتي: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
-const VER='1.57';
+const VER='1.58';
 $('ver').textContent=VER; $('ver2').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
@@ -534,6 +538,13 @@ $('bOpt').addEventListener('click',()=>{ unlockBeep(); if($('opts').classList.co
 ['bGap','bTalq','bTxt','bMark','bGo','bNew'].forEach(id=>$(id).addEventListener('click',()=>{ optChose=true; if($('opts').classList.contains('on')){ clearTimeout(optT); optT=setTimeout(optHide,30000); } }));
 function updFeat(){ const a=[]; if(talq) a.push('الترديد'); if(gapListen) a.push('فاصلة بين الآيات'); if(showTxt) a.push('نص القرآن'); $('feat').innerHTML=a.length?a.map(x=>'<b>●</b>'+x).join(' '):''; }
 setInterval(updFeat,500); updFeat();
+
+let spd=lsGet('spd',1); if(!(spd>=0.5&&spd<=2)) spd=1;
+function fixRate(){ try{ const r=String(audio.src).startsWith('data:')?1:spd; if(audio.playbackRate!==r){ audio.playbackRate=r; } audio.preservesPitch=true; audio.webkitPreservesPitch=true; }catch(e){} }
+['loadstart','loadedmetadata','play','playing'].forEach(ev=>audio.addEventListener(ev,fixRate));
+function spdUi(){ const r=$('spdR'); r.value=spd; $('spdV').textContent=(Math.round(spd*100)/100)+'×'; r.setAttribute('aria-valuetext',(Math.round(spd*100)/100)+' مرة'); }
+$('spdR').addEventListener('input',()=>{ let v=+$('spdR').value; if(Math.abs(v-1)<0.04) v=1; spd=v; lsSet('spd',spd); spdUi(); fixRate(); pkChose=true; clearTimeout(pkT); pkT=setTimeout(hidePk,30000); });
+spdUi();
 function stopAll(){ sessId++; sessListening=false; resumeOnTap=false; try{ if(cur){ const c=cur; c.got=''; c.fin(); } }catch(e){} try{ getRecog().abort(); }catch(e){} stopAudio(); try{ speechSynthesis.cancel(); }catch(e){} $('bigT').textContent='اضغط للتحدث'; }
 let wasPl=false;
 function updStop(){ const b=$('bStop'); const on=!!playing; const k=on?'s':'p'; if(b.dataset.k===k) return; b.dataset.k=k; setTog(b,on?'إيقاف':'تشغيل',false); }
