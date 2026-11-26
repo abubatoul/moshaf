@@ -46,6 +46,16 @@ body.nobtn{box-sizing:border-box;padding-bottom:calc(36px + env(safe-area-inset-
 #big.wv #wave{display:flex}
 #big.wv.wvp #wave i{animation-play-state:running}
 @media (prefers-reduced-motion:reduce){#big.wv.wvp #wave i{animation:none;transform:scaleY(2)}}
+#pk{display:none;grid-template-columns:1fr 1fr;gap:10px;margin:10px 14px 0}
+#pk.on{display:grid}
+#pk button{height:3.4rem;border-radius:16px;border:0;background:rgba(255,255,255,.14);color:#fff;font:inherit;font-size:1.1rem;font-weight:700}
+#pkSh{position:fixed;inset:0;z-index:60;background:#0f3d33;overflow:auto;padding:14px 16px 40px;display:none;direction:rtl;-webkit-overflow-scrolling:touch}
+#pkSh.on{display:block}
+#pkSh h2{margin:.2rem 0 .8rem;font-size:1.3rem}
+#pkX{position:sticky;top:0;float:left;width:3rem;height:3rem;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:1.3rem}
+#pkQ{width:100%;box-sizing:border-box;font:inherit;font-size:1.1rem;padding:.7rem .9rem;border-radius:12px;border:0;margin-bottom:.6rem;background:#ffffff1f;color:#fff}
+#pkL button{display:block;width:100%;text-align:right;font:inherit;font-size:1.1rem;padding:.85rem .9rem;margin:0 0 6px;border-radius:12px;border:0;background:rgba(255,255,255,.1);color:#fff}
+#pkL button.cur{background:#b3541e;font-weight:700}
 #row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 14px calc(40px + env(safe-area-inset-bottom))}
 #bMark{grid-column:1/-1;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 #row button .ic{height:1.7rem;width:auto;vertical-align:middle;margin-inline-end:.5rem}
@@ -59,6 +69,8 @@ body.nobtn{box-sizing:border-box;padding-bottom:calc(36px + env(safe-area-inset-
 <div id="hp" role="dialog" aria-modal="true" aria-label="الأوامر الصوتية" hidden><button type="button" id="hpX" aria-label="إغلاق">✕</button><h2>الأوامر الصوتية</h2><div class="sec"><h3>التشغيل</h3><div class="r"><b>اذكر اسم السورة</b><span>مثل: سورة الملك</span></div><div class="r"><b>القارئ العفاسي</b><span>يغيّر القارئ</span></div><div class="r"><b>سورة الملك بصوت العفاسي</b><span>سورة وقارئ معاً</span></div><div class="r"><b>اقرأ · كمل · اكمل القراءة</b><span>يكمل من مكان الوقوف</span></div><div class="r"><b>آية ثلاثين</b><span>ينتقل إلى الآية</span></div><div class="r"><b>أعد</b><span>يعيد الآية</span></div><div class="r"><b>التالي · السابق</b><span>آية بعد أو قبل</span></div><div class="r"><b>سورة تالية · سورة سابقة</b><span>سورة بعد أو قبل</span></div><div class="r"><b>أوقف</b><span>يوقف التشغيل</span></div><div class="r"><b>من القارئ؟</b><span>يقول اسم القارئ</span></div></div><div class="sec"><h3>مكان الوقوف</h3><div class="r"><b>وين وقفت؟</b><span>يقول السورة والآية</span></div><div class="r"><b>احفظ</b><span>يحفظ العلامة هنا</span></div><div class="r"><b>اذهب للعلامة</b><span>يرجع للعلامة المحفوظة</span></div></div><div class="sec"><h3>الإعدادات (نطق الأمر يفعّله - وإعادته يلغيه)</h3><div class="r"><b>ترديد</b><span>تردد بعد القارئ آية آية</span></div><div class="r"><b>فاصلة</b><span>الاستماع بين الآيات</span></div><div class="r"><b>نص</b><span>إظهار أو إخفاء نص القرآن</span></div><div class="r"><b>الأوامر · أزرار</b><span>إظهار أو إخفاء الأزرار</span></div><div class="r"><b>بدون فاصلة · بدون ترديد</b><span>إلغاء مباشر</span></div></div><div class="sec"><h3>مفيد</h3><div class="r"><b>مساعدة</b><span>يقرأ لك الأوامر</span></div><div class="r"><b>اضغط أي مكان</b><span>للتحدث (عند إخفاء الأزرار)</span></div></div><button type="button" id="hpSay">استمع للأوامر</button><button type="button" id="hpClose">إغلاق</button></div><div id="st" aria-live="polite"></div>
 <div id="ay" aria-hidden="true"></div>
 <pre id="dbg" style="display:none;margin:0 14px;font-size:.8rem;opacity:.75;direction:ltr;text-align:left;white-space:pre-wrap;max-height:9.5em;overflow:hidden"></pre>
+<div id="pk"><button id="pkR" type="button">القارئ</button><button id="pkS" type="button">السورة</button></div>
+<div id="pkSh" role="dialog" aria-modal="true" hidden><button id="pkX" type="button" aria-label="إغلاق">✕</button><h2 id="pkH"></h2><input id="pkQ" type="search" placeholder="ابحث بالاسم" aria-label="بحث"><div id="pkL"></div></div>
 <div id="row"><button id="bStop" type="button">إيقاف</button><button id="bGap" type="button"></button><button id="bTalq" type="button"></button><button id="bTxt" type="button"></button><button id="bMark" type="button">وضع علامة</button><button id="bGo" type="button" style="display:none">الذهاب للعلامة</button><button id="bNew" type="button" style="display:none">علامة جديدة</button></div>
 <script>
 const NAMES=["الفاتحة","البقرة","آل عمران","النساء","المائدة","الأنعام","الأعراف","الأنفال","التوبة","يونس","هود","يوسف","الرعد","ابراهيم","الحجر","النحل","الإسراء","الكهف","مريم","طه","الأنبياء","الحج","المؤمنون","النور","الفرقان","الشعراء","النمل","القصص","العنكبوت","الروم","لقمان","السجدة","الأحزاب","سبإ","فاطر","يس","الصافات","ص","الزمر","غافر","فصلت","الشورى","الزخرف","الدخان","الجاثية","الأحقاف","محمد","الفتح","الحجرات","ق","الذاريات","الطور","النجم","القمر","الرحمن","الواقعة","الحديد","المجادلة","الحشر","الممتحنة","الصف","الجمعة","المنافقون","التغابن","الطلاق","التحريم","الملك","القلم","الحاقة","المعارج","نوح","الجن","المزمل","المدثر","القيامة","الانسان","المرسلات","النبإ","النازعات","عبس","التكوير","الإنفطار","المطففين","الإنشقاق","البروج","الطارق","الأعلى","الغاشية","الفجر","البلد","الشمس","الليل","الضحى","الشرح","التين","العلق","القدر","البينة","الزلزلة","العاديات","القارعة","التكاثر","العصر","الهمزة","الفيل","قريش","الماعون","الكوثر","الكافرون","النصر","المسد","الإخلاص","الفلق","الناس"];
@@ -66,7 +78,7 @@ const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== قرآنك الصوتي: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
-const VER='1.47';
+const VER='1.48';
 $('ver').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
@@ -161,6 +173,7 @@ function stopAudio(){ try{ savePos(); }catch(e){} token++; playing=false; try{ a
 function waitEnd(){ return new Promise(res=>{ audio.onended=res; audio.onerror=res; }); }
 async function playFrom(s,a){
   try{ if(mkOpen){ mkOpen=false; updMark(); } }catch(e){}
+  try{ if($('pk').classList.contains('on')){ clearTimeout(pkT); pkT=setTimeout(hidePk,30000); } }catch(e){}
   stopAudio(); const my=token; surah=s; ayah=a||1; save(); playing=true;
   if(isFull()){
     if((REC[rec][3]||[]).includes(s)){ playing=false; await say('سورة '+NAMES[s-1]+' غير متوفرة عند هذا القارئ'); return; }
@@ -347,7 +360,7 @@ async function handle(t,inGap){
   show('سمعتك: '+t);
   switch(p.c){
     case 'none': if(t&&!/[ء-ي0-9٠-٩a-zA-Z]/.test(t)) show('سمعتك: '+t+' ['+Array.from(String(t)).map(c=>c.codePointAt(0).toString(16)).join(' ')+']'); return '';
-    case 'stop': stopAudio(); $('bigT').textContent='اضغط للتحدث'; say('تم الإيقاف.'); return 'stop';
+    case 'stop': stopAudio(); $('bigT').textContent='اضغط للتحدث'; showPk(); say('تم الإيقاف.'); return 'stop';
     case 'help': stopAudio(); await say(HELP); return 'stop';
     case 'who': await say('القارئ '+rname()+'، وأنت في سورة '+NAMES[surah-1]); return '';
     case 'talq': { const want=(p.on===null)?!talq:p.on; p.on=want; } if(p.on&&isFull()){ await say('هذا القارئ يقرأ السورة كاملة. اختر قارئًا يقرأ آيةً آية، مثل العفاسي.'); return ''; } talq=p.on; save(); updTalq(); if(p.on){ stopAudio(); await say('وضع الترديد. بعد كل آية، اقرأ أنت.'); playFrom(surah,ayah); return 'stop'; } await say('تم إلغاء وضع الترديد.'); return '';
@@ -420,7 +433,7 @@ $('big').addEventListener('click',()=>{
   if(!opened){ opened=true; (async()=>{ $('bigT').textContent='جارٍ التحضير'; await sleep(500); if(ot!==openTok) return; await playClip(12); if(ot!==openTok) return; if(!playing&&(surah!==1||ayah!==1)){ show('آخر آية: سورة '+NAMES[surah-1]+'، آية '+ayah+'. قل: اكمل القراءة.'); } session(); })(); return; }
   session();
 });
-document.body.addEventListener('click',e=>{ if(e.composedPath().some(n=>n&&(n.tagName==='BUTTON'||n.id==='hp'))) return; $('big').click(); });
+document.body.addEventListener('click',e=>{ if(e.composedPath().some(n=>n&&(n.tagName==='BUTTON'||n.id==='hp'||n.id==='pkSh'))) return; $('big').click(); });
 if(/[?&]debug/.test(location.search)) $('dbg').style.display='block';
 
 function chime(){ try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)(); const t=actx.currentTime+0.05; [[659.25,0],[880,0.16],[1318.5,0.32]].forEach(([f,d])=>{ const o=actx.createOscillator(), g=actx.createGain(); o.type='sine'; o.frequency.value=f; g.gain.setValueAtTime(0.0001,t+d); g.gain.linearRampToValueAtTime(0.35,t+d+0.02); g.gain.exponentialRampToValueAtTime(0.0008,t+d+0.8); o.connect(g); g.connect(actx.destination); o.start(t+d); o.stop(t+d+0.9); }); }catch(e){} }
@@ -474,11 +487,21 @@ document.addEventListener('pointerdown',unlockTTS,{once:true,passive:true});
  const pl=()=>{ const on=!audio.paused&&!audio.ended; big.classList.toggle('wvp',on); if(on){ setup(); if(an&&!raf) raf=requestAnimationFrame(loop); } else { bars.forEach(b=>{ b.style.animation=''; b.style.transform=''; }); } };
  ['play','playing','pause','ended','waiting','emptied'].forEach(ev=>audio.addEventListener(ev,pl)); setInterval(pl,400);
 })();
+
+let pkT=null, pkMode='';
+function hidePk(){ clearTimeout(pkT); pkT=null; $('pk').classList.remove('on'); }
+function showPk(){ $('pk').classList.add('on'); clearTimeout(pkT); pkT=setTimeout(hidePk,30000); }
+function pkClose(){ $('pkSh').classList.remove('on'); $('pkSh').hidden=true; }
+function pkFill(){ const q=norm($('pkQ').value.trim()); const L=$('pkL'); L.innerHTML=''; const add=(label,cur,fn)=>{ const b=document.createElement('button'); b.type='button'; b.textContent=label; if(cur){ b.className='cur'; b.setAttribute('aria-current','true'); } b.onclick=fn; L.appendChild(b); };
+  if(pkMode==='r'){ Object.keys(REC).forEach(k=>{ const n=REC[k][0]; if(q&&norm(n).indexOf(q)<0) return; add(n,k===rec,()=>{ unlockBeep(); pkClose(); rec=k; save(); prefetch(surah,isFull()?1:ayah); show('القارئ: '+rname()); playFrom(surah,isFull()?1:ayah); }); }); }
+  else { NAMES.forEach((n,i)=>{ const lab=(i+1)+' · '+n; if(q&&norm(n).indexOf(q)<0&&String(i+1)!==q) return; add(lab,(i+1)===surah,()=>{ unlockBeep(); pkClose(); surah=i+1; ayah=1; save(); prefetch(surah,1); show('سورة '+NAMES[surah-1]+' · '+rname()); playFrom(surah,1); }); }); } }
+function pkOpen(m){ pkMode=m; $('pkH').textContent=m==='r'?'اختر القارئ':'اختر السورة'; $('pkQ').value=''; pkFill(); $('pkSh').hidden=false; $('pkSh').classList.add('on'); clearTimeout(pkT); pkT=setTimeout(hidePk,30000); const cur=$('pkL').querySelector('.cur'); if(cur) cur.scrollIntoView({block:'center'}); }
+$('pkR').addEventListener('click',()=>pkOpen('r')); $('pkS').addEventListener('click',()=>pkOpen('s')); $('pkX').addEventListener('click',pkClose); $('pkQ').addEventListener('input',pkFill);
 function stopAll(){ sessId++; sessListening=false; resumeOnTap=false; try{ if(cur){ const c=cur; c.got=''; c.fin(); } }catch(e){} try{ getRecog().abort(); }catch(e){} stopAudio(); try{ speechSynthesis.cancel(); }catch(e){} $('bigT').textContent='اضغط للتحدث'; }
 let wasPl=false;
 function updStop(){ const b=$('bStop'); const on=!!playing; const k=on?'s':'p'; if(b.dataset.k===k) return; b.dataset.k=k; setTog(b,on?'إيقاف':'تشغيل',false); }
 setInterval(updStop,250); updStop();
-$('bStop').addEventListener('click',()=>{ unlockTTS(); unlockBeep(); if(playing){ stopAll(); show('تم إيقاف كل شيء','اضغط الشاشة للتحدث'); } else { sessId++; try{ speechSynthesis.cancel(); }catch(e){} opened=true; $('bigT').textContent='جارٍ التشغيل'; playFrom(surah,ayah||1); } updStop(); });
+$('bStop').addEventListener('click',()=>{ unlockTTS(); unlockBeep(); if(playing){ stopAll(); show('تم إيقاف كل شيء','اضغط الشاشة للتحدث'); showPk(); } else { sessId++; try{ speechSynthesis.cancel(); }catch(e){} opened=true; $('bigT').textContent='جارٍ التشغيل'; playFrom(surah,ayah||1); } updStop(); });
 function hpOpen(on){ const h=$('hp'); if(on){ h.hidden=false; h.classList.add('on'); h.scrollTop=0; try{ const h2=h.querySelector('h2'); h2.setAttribute('tabindex','-1'); h2.focus({preventScroll:true}); }catch(e){} } else { h.classList.remove('on'); h.hidden=true; try{ speechSynthesis.cancel(); }catch(e){} } }
 $('bHelp').addEventListener('click',()=>{ stopAudio(); hpOpen(true); });
 $('hpClose').addEventListener('click',()=>hpOpen(false)); $('hpX').addEventListener('click',()=>hpOpen(false));
