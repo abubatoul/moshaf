@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>فحص أوقات الآيات</title>
+<style>body{font:16px -apple-system,Helvetica,sans-serif;background:#0f3d33;color:#fff;margin:0;padding:16px}h1{font-size:1.2rem}button{font:inherit;font-weight:700;padding:.8rem 1.2rem;border-radius:12px;border:0;background:#b3541e;color:#fff;margin:.5rem 0}
+td,th{border-bottom:1px solid #ffffff30;padding:.4rem .3rem;text-align:right;font-size:.9rem}table{width:100%;border-collapse:collapse;margin-top:8px}.ok{color:#2ee66b;font-weight:700}.no{color:#ff8a7a;font-weight:700}#log{white-space:pre-wrap;font-size:.85rem;line-height:1.6;margin-top:10px}</style></head><body>
+<h1>فحص أوقات بداية الآيات (mp3quran)</h1><div>اضغط الزر، وانتظر، ثم أرسل لي صورة النتيجة (قد تحتاج تمرر لتصوير كل شي).</div><button id="go">ابدأ الفحص</button><div id="log"></div><table id="t"></table>
+<script>
+const MINE=[['بيشه وا الكردي','peshawa-kurdi','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/'],['رعد الكردي','raad-kurdi','https://cdn.mp3quran.net/audio/raad-kurdi/r1/'],['مصطفى العزاوي','mustafa-azzawi','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],['عامر الكاظمي','amer-al-kazemi','https://media.way2quran.com/amer-al-kazemi/'],['الحافظ خليل إسماعيل','khalil-ismail','https://media.way2quran.com/al-hafiz-khalil-ismail/'],['ضاري العاصي','dary','https://media.way2quran.com/dary-ibrahim-al-aasy/'],['ميثم التمار','archive','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']];
+const L=m=>{document.getElementById('log').textContent+=m+'\n'};
+const C=v=>'<td class="'+(v==='نعم'||/^\d/.test(v)?'ok':'no')+'">'+v+'</td>';
+document.getElementById('go').onclick=async()=>{
+ const t=document.getElementById('t'); t.innerHTML='<tr><th>القارئ</th><th>وجدته في القائمة</th><th>مطابقة الرابط</th><th>سورة ١ (عدد الآيات)</th><th>سورة ٢</th></tr>'; document.getElementById('log').textContent='';
+ let reads; try{ const r=await fetch('https://mp3quran.net/api/v3/ayat_timing/reads'); reads=await r.json(); if(!Array.isArray(reads)) reads=reads.reads||reads.data||[]; L('عدد القراءات التي لها أوقات: '+reads.length); }catch(e){ L('تعذر جلب القائمة: '+e); return; }
+ for(const [nm,key,url] of MINE){
+  const word=nm.split(' ')[0];
+  const byUrl=reads.find(x=>x.folder_url&&(x.folder_url.indexOf(url.replace(/\/r1\/$/,'').replace(/\/$/,''))>=0||url.indexOf(String(x.folder_url).replace(/\/$/,''))>=0));
+  const byName=reads.find(x=>x.name&&x.name.indexOf(word)>=0);
+  const m=byUrl||byName; let a='لا',b='—',c='—',d='—';
+  if(m){ a='نعم ('+m.id+': '+m.name+')'; b=byUrl?'نعم':'بالاسم فقط';
+   for(const s of [1,2]){ try{ const r=await fetch('https://mp3quran.net/api/v3/ayat_timing?surah='+s+'&read='+m.id); const j=await r.json(); const arr=Array.isArray(j)?j:[]; const v=arr.length?arr.filter(x=>x.ayah>0).length+' آية':'فاضي'; if(s===1) c=v; else d=v; }catch(e){ if(s===1) c='خطأ'; else d='خطأ'; } } }
+  t.insertAdjacentHTML('beforeend','<tr><td>'+nm+'</td>'+C(a.startsWith('نعم')?'نعم':'لا')+'<td>'+a+' / '+b+'</td>'+C(c)+C(d)+'</tr>'); }
+ L('انتهى');
+};
+</script></body></html>
