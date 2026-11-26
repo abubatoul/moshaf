@@ -78,7 +78,7 @@ const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== قرآنك الصوتي: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
-const VER='1.48';
+const VER='1.50';
 $('ver').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
@@ -172,6 +172,7 @@ function savePos(){ const c=curAy; if(c && surah===c[0] && (ayah===c[1]||ayah===
 function stopAudio(){ try{ savePos(); }catch(e){} token++; playing=false; try{ audio.pause(); }catch(e){} }
 function waitEnd(){ return new Promise(res=>{ audio.onended=res; audio.onerror=res; }); }
 async function playFrom(s,a){
+  try{ window.wavePrep&&window.wavePrep(); }catch(e){}
   try{ if(mkOpen){ mkOpen=false; updMark(); } }catch(e){}
   try{ if($('pk').classList.contains('on')){ clearTimeout(pkT); pkT=setTimeout(hidePk,30000); } }catch(e){}
   stopAudio(); const my=token; surah=s; ayah=a||1; save(); playing=true;
@@ -475,8 +476,7 @@ document.addEventListener('pointerdown',unlockTTS,{once:true,passive:true});
  const upd=()=>{ big.classList.toggle('wv',bt.textContent==='جارٍ التشغيل'); };
  new MutationObserver(upd).observe(bt,{childList:true,characterData:true,subtree:true}); upd();
  let ctx=null, an=null, data=null, live=false, zeroSince=0, raf=0, failed=false;
- try{ audio.crossOrigin='anonymous'; }catch(e){}
- function setup(){ if(ctx||failed) return; try{ const AC=window.AudioContext||window.webkitAudioContext; ctx=new AC(); const src=ctx.createMediaElementSource(audio); an=ctx.createAnalyser(); an.fftSize=64; an.smoothingTimeConstant=.6; src.connect(an); an.connect(ctx.destination); data=new Uint8Array(an.frequencyBinCount); }catch(e){ failed=true; ctx=null; } }
+ function setup(){ if(ctx||failed) return; try{ audio.crossOrigin='anonymous';  const AC=window.AudioContext||window.webkitAudioContext; ctx=new AC(); const src=ctx.createMediaElementSource(audio); an=ctx.createAnalyser(); an.fftSize=64; an.smoothingTimeConstant=.6; src.connect(an); an.connect(ctx.destination); data=new Uint8Array(an.frequencyBinCount); }catch(e){ failed=true; ctx=null; } }
  function loop(){ raf=0; if(!big.classList.contains('wvp')||!an) return; try{ if(ctx.state==='suspended') ctx.resume(); }catch(e){}
   an.getByteFrequencyData(data); let sum=0; for(let k=0;k<data.length;k++) sum+=data[k];
   const now=performance.now();
@@ -484,7 +484,8 @@ document.addEventListener('pointerdown',unlockTTS,{once:true,passive:true});
   if(live){ bars.forEach((b,k)=>{ const v=data[1+k*2]/255; b.style.animation='none'; b.style.transform='scaleY('+(.4+v*4.2).toFixed(2)+')'; }); }
   else bars.forEach(b=>{ b.style.animation=''; b.style.transform=''; });
   raf=requestAnimationFrame(loop); }
- const pl=()=>{ const on=!audio.paused&&!audio.ended; big.classList.toggle('wvp',on); if(on){ setup(); if(an&&!raf) raf=requestAnimationFrame(loop); } else { bars.forEach(b=>{ b.style.animation=''; b.style.transform=''; }); } };
+ window.wavePrep=()=>{ try{ if(isFull()) setup(); }catch(e){} };
+ const pl=()=>{ const on=!audio.paused&&!audio.ended; big.classList.toggle('wvp',on); if(on){ if(an&&!raf) raf=requestAnimationFrame(loop); } else { bars.forEach(b=>{ b.style.animation=''; b.style.transform=''; }); } };
  ['play','playing','pause','ended','waiting','emptied'].forEach(ev=>audio.addEventListener(ev,pl)); setInterval(pl,400);
 })();
 
