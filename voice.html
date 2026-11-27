@@ -94,7 +94,7 @@ const COUNTS=[7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,
 const REC={afasy:['مشاري العفاسي','Alafasy_128kbps'],aj:['أحمد العجمي','ahmed_ibn_ali_al_ajamy_128kbps'],bm:['عبدالباسط عبدالصمد · مرتل','Abdul_Basit_Murattal_192kbps'],bj:['عبدالباسط عبدالصمد · مجوّد','Abdul_Basit_Mujawwad_128kbps'],hs:['محمود الحصري','Husary_128kbps'],mn:['محمد صديق المنشاوي · مرتل','Minshawy_Murattal_128kbps'],mnj:['محمد صديق المنشاوي · مجوّد','Minshawy_Mujawwad_192kbps'],bn:['محمود علي البنا','mahmoud_ali_al_banna_32kbps'],tb:['محمد الطبلاوي','Mohammad_al_Tablaway_128kbps'],mq:['ماهر المعيقلي','MaherAlMuaiqly128kbps'],ds:['ياسر الدوسري','Yasser_Ad-Dussary_128kbps'],qt:['ناصر القطامي','Nasser_Alqatami_128kbps'],sd:['عبدالرحمن السديس','Abdurrahmaan_As-Sudais_192kbps'],sh:['سعود الشريم','Saood_ash-Shuraym_128kbps'],jh:['عبدالله عواد الجهني','Abdullaah_3awwaad_Al-Juhaynee_128kbps'],gm:['سعد الغامدي','Ghamadi_40kbps'],hd:['علي الحذيفي','Hudhaify_128kbps'],kr:['كريم منصوري','Karim_Mansoori_40kbps'],pk:['بيشه وا الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/peshawa-kurdi/r1/',[],268],rk:['رعد الكردي · سورة كاملة','','https://cdn.mp3quran.net/audio/raad-kurdi/r1/',[],221],az:['مصطفى العزاوي · سورة كاملة','','https://cdn.mp3quran.net/audio/mustafa-azzawi/r1/'],ak:['عامر الكاظمي · سورة كاملة','','https://media.way2quran.com/amer-al-kazemi/hafs-an-asim/'],kh:['الحافظ خليل إسماعيل · سورة كاملة','','https://media.way2quran.com/al-hafiz-khalil-ismail/hafs-an-asim/',[],0,1],dr:['ضاري العاصي · سورة كاملة','','https://media.way2quran.com/dary-ibrahim-al-aasy/hafs-an-asim/'],mt:['ميثم التمار · سورة كاملة','','https://archive.org/download/alfirdnbv54446i67656534323543544563432433_gmail_019_201801/']};
 // ====== قرآنك الصوتي: ملف منفصل لا يمس التطبيق الأساسي ======
 const $=id=>document.getElementById(id);
-const VER='1.68';
+const VER='1.69';
 $('ver').textContent=VER; $('ver2').textContent=VER;
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 const LS='mqv_'; const lsGet=(k,d)=>{ try{ const v=localStorage.getItem(LS+k); return v==null?d:JSON.parse(v); }catch(e){ return d; } }; const lsSet=(k,v)=>{ try{ localStorage.setItem(LS+k,JSON.stringify(v)); }catch(e){} };
@@ -239,7 +239,7 @@ async function playFrom(s,a){
           const dur=plan?(plan.cuts[k+1]-plan.cuts[k]):((isFinite(audio.duration)&&audio.duration)||4);
           win=Math.min(40000,Math.max(5000,dur*1000*1.8+3000));
           show('دورك: رددها','دورك'); const tt=await listenOnce(win,true); if(my!==token) return; $('bigT').textContent='جارٍ التشغيل';
-          if(tt){ const q=norm(tt); const W=q.split(' '); if(W.length<=2){ const p=parse(tt); if(['stop','again','next','prev','help','talq'].includes(p.c)){ isCmd=true; const r=await handle(tt,true); if(r==='stop'||my!==token) return; break; } } heard+=(heard?' ':'')+tt; markHeard(vNorm(heard)); }
+          if(tt){ const q=norm(tt); const W=q.split(' '); if(W.length<=2){ const p=parse(tt); if(['stop','again','next','prev','help','talq','speed'].includes(p.c)){ isCmd=true; const r=await handle(tt,true); if(r==='stop'||my!==token) return; break; } } heard+=(heard?' ':'')+tt; markHeard(vNorm(heard)); }
         }
         if(!isCmd && E && heard && !plan){ const t0=Date.now(); const nw=E.split(' ').length; let more=0;
           while(qScore(E,vNorm(heard))<0.75 && more<4 && Date.now()-t0<win && my===token){ more++; const t2=await listenOnce(Math.min(6000,nw>12?6000:4000),true); if(my!==token) return; if(!t2) break; heard+=' '+t2; markHeard(vNorm(heard)); } }
@@ -377,6 +377,21 @@ function egy(q){ let o=' '+q+' ';
   let r=w.join(' ');
   r=r.replace(/^(?:اسمع|شغل|افتح|هات|اقرا|ودي|روح|ابدا|اعرض)\s+(?=سوره)/,'');
   return r; }
+function speedCmd(q,W){
+  if(W.length>7 || /(^| )(سوره|ايه|اياه)( |$)/.test(q)) return null;
+  const sr=/(^| )(ال)?(سرعه|سرعة)( |$)|(^| )(اسرع|اسرعي|اسرعها|اسرعه|سرع|سرعي|سرعها|بسرعه)( |$)/.test(q);
+  const big=/(كثير|كتير|جدا|اوي|قوي|بزياده|بكثير|بشكل كبير|مره)( |$)/.test(q);
+  const step=big?0.35:0.15;
+  if(sr && /(^| )(رجع|ارجع|رجعي|ردي|رد|اعد|اعيدي|عيد)( |$)/.test(q) && W.length<=4) return {c:'speed',to:1};
+  if(sr && /(عادي|طبيعي|اصلي|اساسي|اعتيادي|1|واحد|بدايه|ريست|reset)/.test(q) && /(سرعه)/.test(q)) return {c:'speed',to:1};
+  const MAXQ=/(اقصي|اقصى|اعلي سرعه|اعلى سرعه|اسرع ما|اسرع شي|اخر سرعه|اخره|الاعلي|الاعلى|اكبر سرعه|ماكس)/, MINQ=/(ادني|ادنى|اقل سرعه|ابطا ما|ابطا شي|الاقل|اصغر سرعه|اقل شي)/;
+  const down=/(^| )(ابطا|ابطي|ابطء|ابطيء|ابطى|بطي|بطا|بطئ|بطيء|بطء|بطيئه|هدي|اهدي|اهدا|هدا|هدي|مهلك|مهل|مهلا|براحه|بالراحه|بشويش|شويش|رويدا|تمهل|تمهلي|ابطئي|بطيئا|ببطء|ببطي|ابطيي|بطييه|بطييي|بط|ببط)( |$)|(^| )(علي|على) مهلك/.test(q) || (sr && /(^| )(قلل|قللي|نقص|نقصي|انقص|انقصي|خفض|خفضي|خفف|خففي|اقل|انزل|نزل|نزلي|اهبط|هبط|تقليل|تخفيض|تنقيص|تخفيف|اهدي|اضعف|الاقل|ادني|اوطي|وطي)( |$)/.test(q));
+  const up=(/(^| )(اسرع|اسرعي|اسرعها|اسرعه|سرع|سرعي|سرعها|عجل|عجلي|عجله)( |$)/.test(q)) || (sr && /(^| )(الاقصي|اقصي|الاعلي|زيد|زيدي|زود|زودي|ارفع|ارفعي|رفع|علي|على|عالي|اعلي|اعلى|اعلا|اكثر|اكتر|زياده|زياده|اسرع|اطلع|طلع|طلعي|اكبر|اقوي|اقوى|الاعلي|شد|شدي|زودها|زيدها)( |$)/.test(q)) || (/^(بسرعه|بسرعه شويه|بسرعه شوي|يلا بسرعه|بسرعه يلا)$/.test(q));
+  if(down && up && !(sr&&/(اقل)/.test(q))) return null;
+  if(down){ if(MINQ.test(q)) return {c:'speed',to:0.5}; return {c:'speed',d:-step}; }
+  if(up){ if(MAXQ.test(q)) return {c:'speed',to:2}; return {c:'speed',d:step}; }
+  return null;
+}
 function parse(t){
   { const T0=String(t||'').replace(/[\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff\u00a0]/g,''); if(/^[\s،,٬‚﹐，､]+$/.test(T0) && /[،,٬‚﹐，､]/.test(T0)) return {c:'gap',on:null}; } // الإملاء يكتب «فاصلة» على شكل ،
   let q=egy(norm(t)); if(!q) return {c:'none'};
@@ -385,6 +400,7 @@ function parse(t){
   if(talq && W.length<=2 && W.some(w=>/^(الغ|الغي|الغاء|الغا|انهاء|انهي|انه)/.test(w))) return {c:'talq',on:false};
   if(W.length<=4 && (/(^| )(النص|نص|الكتابه|المكتوب)( |$)/.test(q) || (/(^| )(القران|الايات|الايه)( |$)/.test(q) && /(اظهر|اعرض|اظهار|عرض|اخف|اخفاء|اخفي|شيل|شيلي|ازل|احذف|امسح|اغلق|اقفل|الغ|بدون)/.test(q))) && W.every(w=>/^(النص|نص|الكتابه|المكتوب|القران|الايات|الايه|اظهر|اظهار|اعرض|عرض|اخفاء|اخفا|اخف|اخفي|بدون|الغ|اغلق|اقفل|عطل|ايقاف|وقف|فعل|شغل|ابدا|لي|و|شيل|شيلي|ازل|احذف|امسح|اشيل)$/.test(w))){ const off=/(اخف|اخفاء|اخفي|بدون|الغ|اغلق|اقفل|عطل|ايقاف|وقف|شيل|شيلي|ازل|احذف|امسح|اشيل)/.test(q), on=/(اظهر|اعرض|اظهار|عرض|فعل|شغل|ابدا)/.test(q); return {c:'txt',on:off?false:(on?true:null)}; }
   if(/(بين الايات|الاستماع بين|فاصله|فاصل|فواصل)/.test(q)){ const off=/(ايقاف|بدون|الغ|اوقف|لا تستمع|بلا|عطل|وقف)/.test(q), on=/(فعل|شغل|ابدا|تشغيل)/.test(q); return {c:'gap',on:off?false:(on?true:null)}; }
+  { const sp=speedCmd(q,W); if(sp) return sp; }
   if(!hasS && short && has('اوقف','وقف','ايقاف','توقف','قف','اسكت','سكت','خلاص','كفايه','كفي','بس','ستوب','اوقفه','اوقفها','وقفه','وقفها','اقفل','اقفلها','اقفله')) return {c:'stop'};
   if(W.length<=4 && /(^| )(الازرار|ازرار|الازار|الاوامر|اوامر)( |$)/.test(q) && W.every(w=>/^(الازرار|ازرار|الازار|الاوامر|اوامر|اظهر|اظهار|اعرض|عرض|اخفاء|اخفا|اخف|اخفي|اخفيها|اظهرها|فعل|شغل|الغ|بدون|اغلق|اقفل|عطل|وقف|ايقاف|لي|و|ال)$/.test(w))){ const off=/(اخف|اخفاء|اخفي|بدون|الغ|اغلق|اقفل|عطل|وقف)/.test(q), on=/(اظهر|اعرض|اظهار|عرض|فعل|شغل)/.test(q); return {c:'btns',on:off?false:(on?true:null)}; }
   if(/(^| )(غير|غيري|اغير|بدل|بدلي|ابدل|تغيير|تبديل|اختار|اختر|غيره|بدله)( | ال)?(القاري|قاري|الشيخ)( |$)|^(القاري|قاري|شيخ) (تاني|ثاني|اخر|ثانيه|تانيه|جديد|مختلف|غيره)$|^(قاري|شيخ) (تاني|ثاني|اخر|غير|مختلف)/.test(q)) return {c:'chgRec'};
@@ -442,6 +458,7 @@ async function handle(t,inGap){
     case 'prev': if(isFull()){ if(surah>1) playFrom(surah-1,1); } else if(ayah>1) playFrom(surah,ayah-1); else if(surah>1) playFrom(surah-1,1); return 'stop';
     case 'again': playFrom(surah,isFull()?1:Math.max(1,ayah-(inGap?1:0))); return 'stop';
     case 'ayah': { const sn=p.s||surah; if(isFull() && !FULLTM[rec]){ await say('هذا القارئ يقرأ السورة كاملة. اختر قارئًا يقرأ آيةً آية، مثل الحُذيفي وعبدالباسط.'); return ''; } if(p.n>=1&&p.n<=COUNTS[sn-1]){ if(p.s){ surah=sn; save(); } prefetch(sn,p.n); playFrom(sn,p.n); return 'stop'; } await say('رقم الآية غير صحيح.'); return ''; }
+    case 'speed': { let v=(p.to!=null)?p.to:(spd+p.d); v=Math.round(Math.max(0.5,Math.min(2,v))*20)/20; if(Math.abs(v-1)<0.04) v=1; const was=spd; spd=v; lsSet('spd',spd); spdUi(); fixRate(); const txt=(p.to===1)?'تم ضبط السرعة على العادية.':(v===was)?(p.d>0||p.to===2?'هذه أعلى سرعة.':'هذه أقل سرعة.'):(v>was?'تمت زيادة السرعة.':'تم تخفيض السرعة.'); show(txt.replace('.','')+' · '+(Math.round(spd*100)/100)+'×'); if(!playing) await say(txt); return ''; }
     case 'play': playFrom(surah,ayah); return 'stop';
     case 'btns': { const on=(p.on===null)?!showBtns:p.on; setBtns(on); await say(on?'تم إظهار الأزرار.':'تم إخفاء الأزرار. اضغط أي مكان في الشاشة للتحدث.'); return ''; }
     case 'mark': await saveMark(); return '';
